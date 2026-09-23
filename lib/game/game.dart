@@ -106,10 +106,10 @@ class Game {
   double get pulseSpeed => size.height * 1.3;
 
   /// Fall speed (play-field heights per second) of the n-th monster.
-  static double speedFor(int n) => min(0.07 + n * 0.0035, 0.40);
+  static double speedFor(int n) => min(0.07 + n * 0.0025, 0.40);
 
   /// Seconds until the monster after the n-th one appears.
-  static double intervalFor(int n) => max(0.65, 2.6 * pow(0.965, n));
+  static double intervalFor(int n) => max(0.65, 2.6 * pow(0.975, n));
 
   bool get canFire => phase == GamePhase.playing && pulse == null;
 
