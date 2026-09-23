@@ -76,6 +76,54 @@ class GamePainter extends CustomPainter {
     }
     _paintLauncher(canvas);
     _paintScore(canvas, size);
+    _paintWaveBanner(canvas, size);
+  }
+
+  static const _bannerDuration = 2.6;
+
+  /// "WAVE n" with the group size, fading in and out as a wave begins.
+  void _paintWaveBanner(Canvas canvas, Size size) {
+    if (game.phase != GamePhase.playing) return;
+    final t = game.waveTime;
+    if (t >= _bannerDuration) return;
+    final alpha = min(1.0, min(t / 0.3, (_bannerDuration - t) / 0.6));
+    final n = game.wave;
+    final subtitle = switch (n) {
+      1 => null,
+      2 => 'in pairs!',
+      3 => 'in threes!',
+      4 => 'in fours!',
+      _ => '$n at a time!',
+    };
+    final tp = TextPainter(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        text: 'WAVE $n',
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: alpha),
+          fontSize: 40,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 4,
+        ),
+        children: [
+          if (subtitle != null)
+            TextSpan(
+              text: '\n$subtitle',
+              style: TextStyle(
+                color: Colors.white70.withValues(alpha: 0.7 * alpha),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1,
+              ),
+            ),
+        ],
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(
+      canvas,
+      Offset((size.width - tp.width) / 2, size.height * 0.4 - tp.height / 2),
+    );
   }
 
   void _paintStars(Canvas canvas, Size size) {

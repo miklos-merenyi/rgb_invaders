@@ -23,7 +23,8 @@ class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin {
   late final Game _game = (widget.game ?? Game())
     ..onHit = ((_) => _sounds.explosion())
-    ..onMiss = _sounds.miss;
+    ..onMiss = _sounds.miss
+    ..onWave = ((_) => _sounds.start());
   final _sounds = SoundService();
   late final Ticker _ticker;
   final _frame = ValueNotifier<int>(0);
@@ -176,7 +177,9 @@ class _GameScreenState extends State<GameScreen>
                   'R+G = yellow, G+B = cyan, R+B = magenta,\n'
                   'R+G+B = white.\n'
                   'A circle only destroys a monster of its own colour.\n'
-                  'Mixed colours score more: 1 point per button.',
+                  'Mixed colours score more: 1 point per button.\n'
+                  'Every 30 monsters a new wave starts slower again,\n'
+                  'but they come in pairs, then threes…',
                   textAlign: TextAlign.center,
                   style: body,
                 ),

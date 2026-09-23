@@ -99,6 +99,15 @@ class Game {
   double time = 0;
   double _spawnTimer = 0;
 
+  /// Current wave (1-based). Wave n sends monsters in groups of n.
+  int wave = 1;
+
+  /// Groups spawned so far in the current wave.
+  int _waveSpawns = 0;
+
+  /// Seconds since the current wave was announced (drives the banner).
+  double waveTime = 0;
+
   /// Whether new monsters appear; tests turn this off.
   bool spawning = true;
 
@@ -107,6 +116,9 @@ class Game {
 
   /// Called when a circle reaches the top without hitting anything.
   void Function()? onMiss;
+
+  /// Called with the new wave number when a wave after the first begins.
+  void Function(int wave)? onWave;
 
   double get monsterRadius => min(size.width * 0.065, 30);
 
@@ -120,6 +132,14 @@ class Game {
   double get pulseSpeed => size.height * 1.3;
 
   // ── Difficulty tuning ──────────────────────────────────────────────────
+  // The game runs in waves of [waveLength] spawns. Within a wave monsters
+  // speed up and come more often; the next wave starts slow again but sends
+  // them in bigger groups (pairs, then threes, ...).
+  static const int waveLength = 30;
+
+  /// Pause between the last spawn of a wave and the first of the next.
+  static const double waveBreak = 4.0;
+
   // Fall speed is in play-field heights per second (0.07 ≈ 14 s to fall).
   static const double startSpeed = 0.07;
   static const double speedStep = 0.0012; // added per monster
@@ -130,10 +150,10 @@ class Game {
   static const double intervalFactor = 0.990;
   static const double minInterval = 0.65;
 
-  /// Fall speed of the n-th monster.
+  /// Fall speed of the n-th group in a wave.
   static double speedFor(int n) => min(startSpeed + n * speedStep, maxSpeed);
 
-  /// Seconds until the monster after the n-th one appears.
+  /// Seconds until the group after the n-th one in a wave appears.
   static double intervalFor(int n) =>
       max(minInterval, startInterval * pow(intervalFactor, n));
 
@@ -151,7 +171,10 @@ class Game {
     score = 0;
     spawned = 0;
     time = 0;
-    _spawnTimer = 0.6;
+    wave = 1;
+    _waveSpawns = 0;
+    waveTime = 0;
+    _spawnTimer = 1.2;
     phase = GamePhase.playing;
   }
 
@@ -173,11 +196,21 @@ class Game {
 
     if (phase != GamePhase.playing) return;
     time += dt;
+    waveTime += dt;
 
     _spawnTimer -= dt;
     if (spawning && _spawnTimer <= 0) {
-      _spawn();
-      _spawnTimer = intervalFor(spawned);
+      _spawnGroup();
+      _waveSpawns++;
+      if (_waveSpawns >= waveLength) {
+        wave++;
+        _waveSpawns = 0;
+        waveTime = 0;
+        _spawnTimer = waveBreak;
+        onWave?.call(wave);
+      } else {
+        _spawnTimer = intervalFor(_waveSpawns);
+      }
     }
 
     final r = monsterRadius;
@@ -193,17 +226,25 @@ class Game {
     _updatePulse(dt);
   }
 
-  void _spawn() {
-    final margin = 0.12;
-    monsters.add(
-      Monster(
-        mask: GameColors.all[_random.nextInt(GameColors.all.length)],
-        baseX: margin + _random.nextDouble() * (1 - 2 * margin),
-        speed: speedFor(spawned),
-        phase: _random.nextDouble() * pi * 2,
-      )..y = -monsterRadius / size.height,
-    );
-    spawned++;
+  /// Spawns [wave] monsters side by side, each in its own lane. They share
+  /// a sway phase so the group moves in formation and never overlaps.
+  void _spawnGroup() {
+    const margin = 0.12;
+    final lane = (1 - 2 * margin) / wave;
+    final jitter = max(0.0, lane - 0.14);
+    final phase = _random.nextDouble() * pi * 2;
+    for (var i = 0; i < wave; i++) {
+      monsters.add(
+        Monster(
+          mask: GameColors.all[_random.nextInt(GameColors.all.length)],
+          baseX:
+              margin + lane * (i + 0.5) + (_random.nextDouble() - 0.5) * jitter,
+          speed: speedFor(_waveSpawns),
+          phase: phase,
+        )..y = -monsterRadius / size.height,
+      );
+      spawned++;
+    }
   }
 
   void _updatePulse(double dt) {

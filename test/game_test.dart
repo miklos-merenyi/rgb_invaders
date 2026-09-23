@@ -80,4 +80,42 @@ void main() {
     expect(GameColors.buttonsFor(GameColors.green | GameColors.blue), 2);
     expect(GameColors.buttonsFor(7), 3);
   });
+
+  test('after a wave of 30, speed resets and monsters come in pairs', () {
+    final g = Game(random: Random(2))
+      ..size = const Size(400, 800)
+      ..start();
+    final waves = <int>[];
+    g.onWave = waves.add;
+    // One entry per spawn: (group size, fall speed).
+    final groups = <(int, double)>[];
+    while (groups.length < Game.waveLength + 2) {
+      g.update(0.05);
+      if (g.monsters.isNotEmpty) {
+        groups.add((g.monsters.length, g.monsters.first.speed));
+        g.monsters.clear(); // keep the game from ending
+      }
+    }
+    final first = groups.take(Game.waveLength);
+    expect(first.every((s) => s.$1 == 1), isTrue);
+    expect(first.last.$2, greaterThan(Game.startSpeed));
+    expect(groups[Game.waveLength].$1, 2);
+    expect(groups[Game.waveLength].$2, Game.startSpeed);
+    expect(waves, [2]);
+  });
+
+  test('a group spawns side by side without overlapping', () {
+    final g = Game(random: Random(5))
+      ..size = const Size(400, 800)
+      ..start()
+      ..wave = 3;
+    while (g.monsters.isEmpty) {
+      g.update(0.05);
+    }
+    final xs = g.monsters.map((m) => m.baseX).toList();
+    expect(xs, hasLength(3));
+    for (var i = 1; i < xs.length; i++) {
+      expect(xs[i] - xs[i - 1], greaterThan(0.12));
+    }
+  });
 }
