@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'chord_detector.dart';
+import 'color_pad.dart';
 import 'game.dart';
 import 'game_painter.dart';
 
@@ -146,38 +147,42 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buildButtons() {
-    return SizedBox(
-      height: 110,
-      child: Row(
+    final held = _chords.held;
+    final litColor = GameColors.of(held);
+    return ListenableBuilder(
+      // Rebuilt every frame so the pads dim while a circle is on screen.
+      listenable: _frame,
+      builder: (context, _) => Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          for (final mask in const [
-            GameColors.red,
-            GameColors.green,
-            GameColors.blue,
-          ])
-            Expanded(child: _buildButton(mask)),
+          SizedBox(
+            height: 110,
+            child: Row(
+              children: [
+                for (final mask in const [
+                  GameColors.red,
+                  GameColors.green,
+                  GameColors.blue,
+                ])
+                  Expanded(
+                    child: Listener(
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (e) => _onButtonDown(e, mask),
+                      onPointerUp: _onButtonUp,
+                      onPointerCancel: _onButtonUp,
+                      child: ColorPad(
+                        mask: mask,
+                        pressed: _chords.isHeld(mask),
+                        litColor: litColor,
+                        ready: _game.canFire,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          MixLegend(held: held),
         ],
-      ),
-    );
-  }
-
-  Widget _buildButton(int mask) {
-    final pressed = _chords.isHeld(mask);
-    final color = GameColors.of(mask);
-    return Listener(
-      onPointerDown: (e) => _onButtonDown(e, mask),
-      onPointerUp: _onButtonUp,
-      onPointerCancel: _onButtonUp,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 60),
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: pressed ? 0.95 : 0.55),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: pressed
-              ? [BoxShadow(color: color, blurRadius: 18, spreadRadius: 1)]
-              : null,
-        ),
       ),
     );
   }

@@ -28,4 +28,5 @@ flutter test           # game-logic tests
 - `lib/game/game.dart`: game state and rules, with no Flutter widgets (easy to test)
 - `lib/game/game_painter.dart`: draws the game on a canvas
 - `lib/game/chord_detector.dart`: groups near-simultaneous presses into one colour (same approach as rigobert)
+- `lib/game/color_pad.dart`: the glossy colour buttons and the colour-mix legend
 - `lib/game/game_screen.dart`: game loop (Ticker), multi-touch buttons, overlays

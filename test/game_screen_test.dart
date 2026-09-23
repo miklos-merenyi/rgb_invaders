@@ -1,3 +1,4 @@
+import 'package:circles/game/color_pad.dart';
 import 'package:circles/game/game.dart';
 import 'package:circles/game/game_screen.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ void main() {
     game.spawning = false;
     await t.pump(const Duration(milliseconds: 16));
 
-    final buttons = find.byType(AnimatedContainer);
+    final buttons = find.byType(ColorPad);
     final red = await t.startGesture(t.getCenter(buttons.at(0)), pointer: 1);
     await t.pump(const Duration(milliseconds: 30));
     final blue = await t.startGesture(t.getCenter(buttons.at(2)), pointer: 2);
