@@ -151,7 +151,12 @@ class GamePainter extends CustomPainter {
   }
 
   void _paintExplosion(Canvas canvas, Explosion e) {
-    final k = e.t / Explosion.duration;
+    if (e.t < Explosion.burstDuration) _paintBurst(canvas, e);
+    _paintPoints(canvas, e);
+  }
+
+  void _paintBurst(Canvas canvas, Explosion e) {
+    final k = e.t / Explosion.burstDuration;
     final color = GameColors.of(e.mask).withValues(alpha: 1 - k);
     final paint = Paint()..color = color;
     final dist = game.monsterRadius * (0.3 + 2.2 * k);
@@ -161,6 +166,32 @@ class GamePainter extends CustomPainter {
       final c = e.position + Offset(cos(a), sin(a)) * dist;
       canvas.drawRect(Rect.fromCenter(center: c, width: s, height: s), paint);
     }
+  }
+
+  /// "+N" rising from the explosion in the monster's colour, then fading.
+  void _paintPoints(Canvas canvas, Explosion e) {
+    final k = e.t / Explosion.duration;
+    final rise = 1 - pow(1 - k, 3); // ease out
+    final alpha = k < 0.6 ? 1.0 : 1 - (k - 0.6) / 0.4;
+    final r = game.monsterRadius;
+    final color = GameColors.of(e.mask);
+    final tp = TextPainter(
+      text: TextSpan(
+        text: '+${GameColors.buttonsFor(e.mask)}',
+        style: TextStyle(
+          color: color.withValues(alpha: alpha),
+          fontSize: r * (0.9 + 0.3 * min(k * 4, 1)),
+          fontWeight: FontWeight.w900,
+          shadows: [
+            Shadow(color: Colors.black.withValues(alpha: alpha), blurRadius: 4),
+            Shadow(color: color.withValues(alpha: alpha * 0.6), blurRadius: 12),
+          ],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final center = e.position - Offset(0, r * 0.4 + r * 1.8 * rise);
+    tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 
   /// Half-circle at the bottom centre showing the colour about to be fired.

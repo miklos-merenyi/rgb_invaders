@@ -37,7 +37,7 @@ void main() {
       g.update(1 / 60);
     }
     expect(g.monsters, isEmpty);
-    expect(g.score, 1);
+    expect(g.score, 2); // yellow takes two buttons
     expect(g.pulse, isNull);
     expect(hits, [GameColors.red | GameColors.green]);
   });
@@ -73,5 +73,11 @@ void main() {
   test('monsters get faster and spawn more often', () {
     expect(Game.speedFor(30), greaterThan(Game.speedFor(0)));
     expect(Game.intervalFor(30), lessThan(Game.intervalFor(0)));
+  });
+
+  test('points equal the buttons a colour needs', () {
+    expect(GameColors.buttonsFor(GameColors.red), 1);
+    expect(GameColors.buttonsFor(GameColors.green | GameColors.blue), 2);
+    expect(GameColors.buttonsFor(7), 3);
   });
 }

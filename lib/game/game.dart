@@ -22,6 +22,10 @@ class GameColors {
   ];
 
   static Color of(int mask) => _palette[mask & 7];
+
+  /// How many buttons make this colour (1 for red, 2 for yellow, 3 for white).
+  static int buttonsFor(int mask) =>
+      (mask & 1) + (mask >> 1 & 1) + (mask >> 2 & 1);
 }
 
 enum GamePhase { ready, playing, over }
@@ -64,7 +68,11 @@ class Pulse {
 class Explosion {
   Explosion(this.position, this.mask);
 
-  static const double duration = 0.6;
+  /// How long the particles fly.
+  static const double burstDuration = 0.6;
+
+  /// How long the "+N" points label floats (the explosion's total lifetime).
+  static const double duration = 1.0;
 
   final Offset position;
   final int mask;
@@ -119,7 +127,7 @@ class Game {
 
   // Gap between monsters in seconds, shrinking by a factor per monster.
   static const double startInterval = 2.6;
-  static const double intervalFactor = 0.988;
+  static const double intervalFactor = 0.990;
   static const double minInterval = 0.65;
 
   /// Fall speed of the n-th monster.
@@ -220,7 +228,7 @@ class Game {
     if (hit != null) {
       explosions.add(Explosion(monsterPosition(hit), hit.mask));
       monsters.remove(hit);
-      score++;
+      score += GameColors.buttonsFor(hit.mask);
       pulse = null;
       onHit?.call(hit.mask);
     } else if (p.radius > maxRadius) {

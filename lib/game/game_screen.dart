@@ -175,7 +175,8 @@ class _GameScreenState extends State<GameScreen>
                   'Press several buttons together to mix colours:\n'
                   'R+G = yellow, G+B = cyan, R+B = magenta,\n'
                   'R+G+B = white.\n'
-                  'A circle only destroys a monster of its own colour.',
+                  'A circle only destroys a monster of its own colour.\n'
+                  'Mixed colours score more: 1 point per button.',
                   textAlign: TextAlign.center,
                   style: body,
                 ),

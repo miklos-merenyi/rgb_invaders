@@ -12,6 +12,8 @@ the bottom of the screen:
 - A circle destroys the first monster of **its own colour** that it touches. It
   passes through monsters of other colours and disappears when it reaches the
   top.
+- Each monster scores 1 point per button its colour needs: 1 for red, green
+  or blue, 2 for yellow, cyan or magenta, and 3 for white.
 - Only one circle can be on screen at a time.
 - The game ends when a monster reaches the bottom. Monsters fall faster and
   appear more often as the game goes on.
