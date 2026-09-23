@@ -111,11 +111,23 @@ class Game {
   /// Circle growth in pixels per second.
   double get pulseSpeed => size.height * 1.3;
 
-  /// Fall speed (play-field heights per second) of the n-th monster.
-  static double speedFor(int n) => min(0.07 + n * 0.0025, 0.40);
+  // ── Difficulty tuning ──────────────────────────────────────────────────
+  // Fall speed is in play-field heights per second (0.07 ≈ 14 s to fall).
+  static const double startSpeed = 0.07;
+  static const double speedStep = 0.0012; // added per monster
+  static const double maxSpeed = 0.40;
+
+  // Gap between monsters in seconds, shrinking by a factor per monster.
+  static const double startInterval = 2.6;
+  static const double intervalFactor = 0.988;
+  static const double minInterval = 0.65;
+
+  /// Fall speed of the n-th monster.
+  static double speedFor(int n) => min(startSpeed + n * speedStep, maxSpeed);
 
   /// Seconds until the monster after the n-th one appears.
-  static double intervalFor(int n) => max(0.65, 2.6 * pow(0.975, n));
+  static double intervalFor(int n) =>
+      max(minInterval, startInterval * pow(intervalFactor, n));
 
   bool get canFire => phase == GamePhase.playing && pulse == null;
 
