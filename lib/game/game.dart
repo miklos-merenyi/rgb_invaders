@@ -94,9 +94,6 @@ class Game {
   /// Whether new monsters appear; tests turn this off.
   bool spawning = true;
 
-  /// Time since the game ended; used to ignore accidental restart taps.
-  double overTime = 0;
-
   double get monsterRadius => min(size.width * 0.065, 30);
 
   Offset get origin => Offset(size.width / 2, size.height);
@@ -129,7 +126,6 @@ class Game {
     spawned = 0;
     time = 0;
     _spawnTimer = 0.6;
-    overTime = 0;
     phase = GamePhase.playing;
   }
 
@@ -149,7 +145,6 @@ class Game {
     }
     explosions.removeWhere((e) => e.done);
 
-    if (phase == GamePhase.over) overTime += dt;
     if (phase != GamePhase.playing) return;
     time += dt;
 
@@ -216,7 +211,6 @@ class Game {
 
   void _gameOver() {
     phase = GamePhase.over;
-    overTime = 0;
     pulse = null;
     best = max(best, score);
   }

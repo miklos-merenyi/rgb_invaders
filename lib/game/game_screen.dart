@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../services/ad_service.dart';
+import '../services/purchase_service.dart';
+import '../widgets/tip_jar.dart';
 import 'chord_detector.dart';
 import 'color_pad.dart';
 import 'game.dart';
@@ -24,6 +27,10 @@ class _GameScreenState extends State<GameScreen>
   double _clock = 0;
   GamePhase _shownPhase = GamePhase.ready;
 
+  /// False between a game ending and its ad (if any) being dismissed, so the
+  /// game-over screen can't be tapped away just as an ad appears.
+  bool _overlayReady = true;
+
   /// Turns near-simultaneous button presses into one mixed colour.
   late final ChordDetector _chords = ChordDetector(onChord: _game.fire);
 
@@ -41,7 +48,22 @@ class _GameScreenState extends State<GameScreen>
     _frame.value++;
     if (_game.phase != _shownPhase) {
       setState(() => _shownPhase = _game.phase);
+      if (_shownPhase == GamePhase.over) _afterGameOver();
     }
+  }
+
+  /// Counts the game, then shows an ad every [kAdEveryNGames] games, or the
+  /// tip jar every [kTipPromptEvery] games, unless a tip removed ads.
+  Future<void> _afterGameOver() async {
+    setState(() => _overlayReady = false);
+    // Let the player see what hit the bottom before anything pops up.
+    await Future<void>.delayed(const Duration(milliseconds: 1000));
+    final ps = PurchaseService();
+    await ps.incrementGames();
+    if (ps.shouldShowAd) await AdService().showIfReady();
+    if (!mounted) return;
+    setState(() => _overlayReady = true);
+    if (ps.shouldShowTipPrompt) await showTipJar(context);
   }
 
   void _onButtonDown(PointerDownEvent e, int mask) {
@@ -54,7 +76,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _onOverlayTap() {
-    if (_game.phase == GamePhase.over && _game.overTime < 0.8) return;
+    if (!_overlayReady) return;
     _chords.reset();
     _game.start();
     setState(() => _shownPhase = _game.phase);
@@ -87,7 +109,9 @@ class _GameScreenState extends State<GameScreen>
                       repaint: _frame,
                     ),
                   ),
-                  if (_shownPhase != GamePhase.playing) _buildOverlay(),
+                  if (_shownPhase == GamePhase.ready ||
+                      _shownPhase == GamePhase.over && _overlayReady)
+                    _buildOverlay(),
                 ],
               ),
             ),
@@ -114,33 +138,64 @@ class _GameScreenState extends State<GameScreen>
         color: Colors.black54,
         alignment: Alignment.center,
         padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(over ? 'GAME OVER' : 'CIRCLES', style: title),
-            const SizedBox(height: 24),
-            if (over) ...[
-              Text(
-                'Score: ${_game.score}',
-                style: body.copyWith(color: Colors.white, fontSize: 24),
-              ),
-              Text('Best: ${_game.best}', style: body),
-            ] else
+        // Scale down on short screens rather than overflow.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(over ? 'GAME OVER' : 'CIRCLES', style: title),
+              const SizedBox(height: 24),
+              if (over) ...[
+                Text(
+                  'Score: ${_game.score}',
+                  style: body.copyWith(color: Colors.white, fontSize: 24),
+                ),
+                Text('Best: ${_game.best}', style: body),
+              ] else
+                const Text(
+                  'Tap a colour button to fire a circle.\n'
+                  'Press several buttons together to mix colours:\n'
+                  'R+G = yellow, G+B = cyan, R+B = magenta,\n'
+                  'R+G+B = white.\n'
+                  'A circle only destroys a monster of its own colour.',
+                  textAlign: TextAlign.center,
+                  style: body,
+                ),
+              const SizedBox(height: 32),
               const Text(
-                'Tap a colour button to fire a circle.\n'
-                'Press several buttons together to mix colours:\n'
-                'R+G = yellow, G+B = cyan, R+B = magenta,\n'
-                'R+G+B = white.\n'
-                'A circle only destroys a monster of its own colour.',
-                textAlign: TextAlign.center,
-                style: body,
+                'Tap to play',
+                style: TextStyle(color: Colors.white, fontSize: 20),
               ),
-            const SizedBox(height: 32),
-            const Text(
-              'Tap to play',
-              style: TextStyle(color: Colors.white, fontSize: 20),
+              const SizedBox(height: 40),
+              _buildSupportLink(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSupportLink() {
+    final ps = PurchaseService();
+    return ListenableBuilder(
+      listenable: ps,
+      builder: (context, _) => GestureDetector(
+        onTap: () => showTipJar(context),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            ps.adsRemoved
+                ? adsFreeLabel(context, ps.adsFreeUntil!)
+                : '☕ Support the dev & remove ads',
+            style: TextStyle(
+              fontSize: 13,
+              color: ps.adsRemoved ? Colors.greenAccent : Colors.white54,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.white24,
+              letterSpacing: 1,
             ),
-          ],
+          ),
         ),
       ),
     );
