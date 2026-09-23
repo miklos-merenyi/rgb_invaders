@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../services/ad_service.dart';
 import '../services/purchase_service.dart';
+import '../services/sound_service.dart';
 import '../widgets/tip_jar.dart';
 import 'chord_detector.dart';
 import 'color_pad.dart';
@@ -20,7 +21,10 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin {
-  late final Game _game = widget.game ?? Game();
+  late final Game _game = (widget.game ?? Game())
+    ..onHit = ((_) => _sounds.explosion())
+    ..onMiss = _sounds.miss;
+  final _sounds = SoundService();
   late final Ticker _ticker;
   final _frame = ValueNotifier<int>(0);
   Duration _last = Duration.zero;
@@ -32,7 +36,7 @@ class _GameScreenState extends State<GameScreen>
   bool _overlayReady = true;
 
   /// Turns near-simultaneous button presses into one mixed colour.
-  late final ChordDetector _chords = ChordDetector(onChord: _game.fire);
+  late final ChordDetector _chords = ChordDetector(onChord: _fire);
 
   @override
   void initState() {
@@ -48,7 +52,10 @@ class _GameScreenState extends State<GameScreen>
     _frame.value++;
     if (_game.phase != _shownPhase) {
       setState(() => _shownPhase = _game.phase);
-      if (_shownPhase == GamePhase.over) _afterGameOver();
+      if (_shownPhase == GamePhase.over) {
+        _sounds.gameOver();
+        _afterGameOver();
+      }
     }
   }
 
@@ -66,6 +73,14 @@ class _GameScreenState extends State<GameScreen>
     if (ps.shouldShowTipPrompt) await showTipJar(context);
   }
 
+  void _fire(int mask) {
+    if (_game.fire(mask)) {
+      _sounds.fire(mask);
+    } else if (_game.phase == GamePhase.playing) {
+      _sounds.dud(); // a circle is still out
+    }
+  }
+
   void _onButtonDown(PointerDownEvent e, int mask) {
     if (_game.phase != GamePhase.playing) return;
     setState(() => _chords.down(e.pointer, mask));
@@ -79,6 +94,7 @@ class _GameScreenState extends State<GameScreen>
     if (!_overlayReady) return;
     _chords.reset();
     _game.start();
+    _sounds.start();
     setState(() => _shownPhase = _game.phase);
   }
 
@@ -112,6 +128,7 @@ class _GameScreenState extends State<GameScreen>
                   if (_shownPhase == GamePhase.ready ||
                       _shownPhase == GamePhase.over && _overlayReady)
                     _buildOverlay(),
+                  Positioned(top: 4, right: 4, child: _buildMuteButton()),
                 ],
               ),
             ),
@@ -171,6 +188,20 @@ class _GameScreenState extends State<GameScreen>
               _buildSupportLink(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return ListenableBuilder(
+      listenable: _sounds,
+      builder: (context, _) => IconButton(
+        onPressed: _sounds.toggle,
+        tooltip: _sounds.enabled ? 'Mute' : 'Unmute',
+        icon: Icon(
+          _sounds.enabled ? Icons.volume_up : Icons.volume_off,
+          color: Colors.white38,
         ),
       ),
     );

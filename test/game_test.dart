@@ -29,6 +29,8 @@ void main() {
 
   test('circle destroys a monster of the same colour', () {
     final g = _newGame();
+    final hits = <int>[];
+    g.onHit = hits.add;
     g.monsters.add(_monsterAt(g, GameColors.red | GameColors.green, 0.5));
     g.fire(GameColors.red | GameColors.green);
     for (var i = 0; i < 60 && g.pulse != null; i++) {
@@ -37,10 +39,13 @@ void main() {
     expect(g.monsters, isEmpty);
     expect(g.score, 1);
     expect(g.pulse, isNull);
+    expect(hits, [GameColors.red | GameColors.green]);
   });
 
   test('circle passes through other colours and ends at the top', () {
     final g = _newGame();
+    var misses = 0;
+    g.onMiss = () => misses++;
     g.monsters.add(_monsterAt(g, GameColors.blue, 0.5));
     g.fire(GameColors.red);
     var frames = 0;
@@ -54,6 +59,7 @@ void main() {
     expect(g.monsters, hasLength(1));
     expect(g.score, 0);
     expect(g.canFire, isTrue);
+    expect(misses, 1);
   });
 
   test('monster reaching the bottom ends the game', () {

@@ -94,6 +94,12 @@ class Game {
   /// Whether new monsters appear; tests turn this off.
   bool spawning = true;
 
+  /// Called with the colour when a circle destroys a monster.
+  void Function(int mask)? onHit;
+
+  /// Called when a circle reaches the top without hitting anything.
+  void Function()? onMiss;
+
   double get monsterRadius => min(size.width * 0.065, 30);
 
   Offset get origin => Offset(size.width / 2, size.height);
@@ -204,8 +210,10 @@ class Game {
       monsters.remove(hit);
       score++;
       pulse = null;
+      onHit?.call(hit.mask);
     } else if (p.radius > maxRadius) {
       pulse = null;
+      onMiss?.call();
     }
   }
 
