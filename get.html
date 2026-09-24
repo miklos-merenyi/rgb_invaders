@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get RGB Invaders</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #12121e;
+      color: #ccc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      background: #1a1a2a;
+      border: 1px solid #ffffff14;
+      border-radius: 20px;
+      padding: 40px 32px;
+    }
+
+    .invader { font-size: 52px; display: block; margin-bottom: 16px; }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #ffffff44;
+      letter-spacing: 1px;
+      margin-bottom: 32px;
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      margin: 8px auto 24px;
+      border: 3px solid #ffffff18;
+      border-top-color: #3366ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .store-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #3366ff;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      margin-bottom: 12px;
+    }
+    .store-btn:hover { background: #4477ff; }
+
+    .qr-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .qr-wrap svg { display: block; width: 220px; height: 220px; }
+
+    .desktop-text { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+
+    .links { display: flex; gap: 12px; justify-content: center; }
+    .links a {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #ffffff0d;
+      border: 1px solid #ffffff18;
+      color: #ccc;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .links a:hover { background: #ffffff18; }
+
+    .links a.pending {
+      color: #ffffff44;
+      pointer-events: none;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <span class="invader">👾</span>
+    <h1>
+      <span style="color:#ff3333">R</span><span style="color:#33ff50">G</span><span style="color:#3366ff">B</span>
+      <span style="color:#ffff00">I</span><span style="color:#00ffff">N</span><span style="color:#ff00ff">V</span><span style="color:#ffffff">A</span><span style="color:#ff3333">D</span><span style="color:#33ff50">E</span><span style="color:#3366ff">R</span><span style="color:#ffff00">S</span>
+    </h1>
+    <p class="subtitle">Get the game</p>
+
+    <!-- Mobile: redirecting to this phone's store -->
+    <div id="mobile-view" class="hidden">
+      <div class="spinner"></div>
+      <p class="desktop-text" id="mobile-text">Opening the store&hellip;</p>
+      <a id="store-btn" class="store-btn" href="#">Open store page</a>
+    </div>
+
+    <!-- Desktop: QR code pointing back to this page -->
+    <div id="desktop-view" class="hidden">
+      <div class="qr-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" role="img" aria-label="QR code for RGB Invaders"><path fill="#fff" d="M0 0h41v41h-41z"/><path stroke="#000" d="M4 4.5h7m1 0h2m2 0h3m1 0h1m1 0h1m2 0h1m4 0h7m-33 1h1m5 0h1m1 0h2m1 0h1m1 0h2m4 0h1m1 0h1m4 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m1 0h1m2 0h1m1 0h1m1 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m1 0h1m1 0h1m1 0h2m1 0h5m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m1 0h2m1 0h2m1 0h1m4 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m4 0h1m1 0h6m2 0h4m1 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-22 1h6m2 0h1m2 0h3m-25 1h1m2 0h10m1 0h1m1 0h5m1 0h1m1 0h2m2 0h1m1 0h3m-33 1h3m4 0h1m1 0h2m1 0h4m1 0h3m1 0h3m4 0h4m-31 1h1m2 0h5m1 0h1m2 0h1m1 0h3m2 0h1m1 0h4m2 0h5m-33 1h2m5 0h2m1 0h4m3 0h4m2 0h1m2 0h2m2 0h3m-31 1h2m1 0h2m2 0h5m1 0h1m1 0h2m7 0h2m-28 1h1m2 0h1m1 0h1m1 0h5m2 0h1m2 0h2m2 0h1m1 0h1m3 0h1m2 0h1m-31 1h1m1 0h2m2 0h1m1 0h1m3 0h1m1 0h2m1 0h1m1 0h1m1 0h1m4 0h1m1 0h1m-28 1h2m2 0h1m1 0h1m2 0h1m2 0h1m2 0h1m1 0h1m1 0h1m4 0h1m3 0h2m1 0h1m-33 1h1m1 0h1m3 0h2m1 0h1m2 0h2m1 0h2m2 0h2m1 0h8m-30 1h6m1 0h3m3 0h1m1 0h1m1 0h4m1 0h1m3 0h1m1 0h1m1 0h1m1 0h1m-30 1h2m1 0h5m2 0h7m3 0h1m2 0h2m1 0h4m-32 1h3m1 0h1m5 0h2m5 0h2m2 0h4m2 0h3m-31 1h1m2 0h1m2 0h2m2 0h2m1 0h2m1 0h1m1 0h2m3 0h2m2 0h1m1 0h1m2 0h1m-33 1h1m1 0h1m1 0h1m2 0h1m3 0h1m6 0h2m1 0h3m3 0h4m-31 1h1m2 0h2m1 0h2m1 0h1m1 0h1m1 0h1m6 0h6m2 0h1m2 0h2m-33 1h1m1 0h4m1 0h6m2 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-33 1h4m1 0h4m2 0h2m3 0h1m3 0h1m2 0h7m2 0h1m-25 1h1m1 0h2m1 0h6m5 0h1m3 0h1m1 0h2m-32 1h7m1 0h3m4 0h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m-31 1h1m5 0h1m1 0h1m1 0h5m2 0h4m2 0h2m3 0h5m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h7m2 0h1m1 0h7m-29 1h1m1 0h3m1 0h1m1 0h5m1 0h1m1 0h1m1 0h2m4 0h2m1 0h1m1 0h4m-33 1h1m1 0h3m1 0h1m2 0h3m1 0h1m1 0h1m1 0h5m1 0h1m1 0h1m1 0h3m1 0h2m-33 1h1m5 0h1m4 0h3m5 0h1m2 0h1m2 0h8m-33 1h7m1 0h2m2 0h4m1 0h1m1 0h2m2 0h2m2 0h4"/></svg>
+      </div>
+      <p class="desktop-text">Scan with your phone to get RGB Invaders</p>
+      <div class="links">
+        <a id="ios-link" href="#">🍎 App Store</a>
+        <a id="android-link" href="#">▶ Google Play</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DRAFT: fill in the store links once the listings are live.
+    // iOS:     'https://apps.apple.com/app/id' + the numeric Apple ID from
+    //          App Store Connect (App Information → Apple ID).
+    // Android: 'https://play.google.com/store/apps/details?id=com.mermik.rgbinvaders'
+    // While a link is empty, that store shows as "coming soon".
+    var IOS_URL = '';
+    var ANDROID_URL = '';
+
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/.test(ua);
+
+    function setLink(id, url, label) {
+      var a = document.getElementById(id);
+      if (url) {
+        a.href = url;
+      } else {
+        a.removeAttribute('href');
+        a.classList.add('pending');
+        a.textContent = label + ' · soon';
+      }
+    }
+    setLink('ios-link', IOS_URL, '🍎 App Store');
+    setLink('android-link', ANDROID_URL, '▶ Google Play');
+
+    if (isIOS || isAndroid) {
+      var target = isIOS ? IOS_URL : ANDROID_URL;
+      var store = isIOS ? 'the App Store' : 'Google Play';
+      document.getElementById('mobile-view').classList.remove('hidden');
+      if (target) {
+        document.getElementById('store-btn').href = target;
+        window.location.href = target;
+        setTimeout(function () {
+          document.querySelector('.spinner').style.display = 'none';
+          document.getElementById('mobile-text').textContent =
+            "Didn't redirect? Tap the button below.";
+        }, 1200);
+      } else {
+        document.querySelector('.spinner').style.display = 'none';
+        document.getElementById('store-btn').style.display = 'none';
+        document.getElementById('mobile-text').textContent =
+          'Coming soon to ' + store + '.';
+      }
+    } else {
+      document.getElementById('desktop-view').classList.remove('hidden');
+    }
+  </script>
+
+</body>
+</html>
