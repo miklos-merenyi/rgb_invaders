@@ -13,6 +13,14 @@ import 'color_pad.dart';
 import 'game.dart';
 import 'game_painter.dart';
 
+/// Build with `--dart-define=DEMO=true` to make the game start and play
+/// itself for a while, e.g. for store screenshots on a simulator. Off in
+/// normal builds, where the compiler drops the demo code.
+const _kDemo = bool.fromEnvironment('DEMO');
+
+/// How long the demo plays before it stops firing and lets the game end.
+const _kDemoSeconds = 300.0;
+
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, this.game});
 
@@ -46,6 +54,19 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     _ticker = createTicker(_tick)..start();
+    if (_kDemo) {
+      Future<void>.delayed(const Duration(seconds: 3), _onOverlayTap);
+    }
+  }
+
+  /// Demo player: fires the colour of the invader closest to the bottom
+  /// once it's a little way down the screen.
+  void _demoTurn() {
+    if (!_game.canFire || _game.time > _kDemoSeconds) return;
+    final target = _game.monsters
+        .where((m) => m.y > 0.2)
+        .fold<Monster?>(null, (a, m) => a == null || m.y > a.y ? m : a);
+    if (target != null) _fire(target.mask);
   }
 
   void _tick(Duration elapsed) {
@@ -53,6 +74,7 @@ class _GameScreenState extends State<GameScreen>
     _last = elapsed;
     _clock += dt;
     _game.update(dt);
+    if (_kDemo) _demoTurn();
     _frame.value++;
     if (_game.phase != _shownPhase) {
       setState(() => _shownPhase = _game.phase);
