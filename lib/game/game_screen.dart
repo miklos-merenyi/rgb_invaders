@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -18,8 +19,10 @@ import 'game_painter.dart';
 /// normal builds, where the compiler drops the demo code.
 const _kDemo = bool.fromEnvironment('DEMO');
 
-/// How long the demo plays before it stops firing and lets the game end.
-const _kDemoSeconds = 300.0;
+/// How long the demo plays (counted from its first game, across restarts)
+/// before it stops firing, loses, and stays on the game-over screen. Sized so
+/// a 2-minute recording ends on game over.
+const _kDemoSeconds = 108.0;
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, this.game});
@@ -55,18 +58,72 @@ class _GameScreenState extends State<GameScreen>
     super.initState();
     _ticker = createTicker(_tick)..start();
     if (_kDemo) {
-      Future<void>.delayed(const Duration(seconds: 3), _onOverlayTap);
+      // Wall-clock time of the first frame, to line up the logged sounds
+      // (see SoundService) with a screen recording.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) =>
+            debugPrint('DEMO_FRAME ${DateTime.now().microsecondsSinceEpoch}'),
+      );
+      Future<void>.delayed(const Duration(seconds: 3), () {
+        _demoClock.start();
+        _onOverlayTap();
+      });
     }
   }
 
-  /// Demo player: fires the colour of the invader closest to the bottom
-  /// once it's a little way down the screen.
+  /// True while the demo player is holding buttons down.
+  bool _demoPressing = false;
+
+  final _demoClock = Stopwatch();
+
+  /// True once the demo has played for [_kDemoSeconds] and should lose.
+  bool get _demoGivingUp =>
+      _demoClock.elapsed.inMilliseconds > _kDemoSeconds * 1000;
+
+  /// Game time before which the demo player won't fire its next shot.
+  double? _demoWaitUntil;
+  final _demoRandom = Random();
+
+  /// Demo player: presses the buttons for the invader closest to the bottom
+  /// once it's a little way down the screen. It goes through the chord
+  /// detector like real fingers, so the pads light up as in normal play.
   void _demoTurn() {
-    if (!_game.canFire || _game.time > _kDemoSeconds) return;
+    if (_demoPressing || !_game.canFire || _demoGivingUp) return;
     final target = _game.monsters
         .where((m) => m.y > 0.2)
         .fold<Monster?>(null, (a, m) => a == null || m.y > a.y ? m : a);
-    if (target != null) _fire(target.mask);
+    if (target == null) return;
+    // Vary the reaction time like a person: usually quick, sometimes slow.
+    final waitUntil = _demoWaitUntil ??=
+        _game.time + 0.05 + pow(_demoRandom.nextDouble(), 2) * 1.2;
+    if (_game.time < waitUntil) return;
+    _demoWaitUntil = null;
+    _demoPressing = true;
+    // Now and then pick the wrong colour, as people do.
+    var mask = target.mask;
+    if (_demoRandom.nextDouble() < 0.12) {
+      final others = GameColors.all.where((m) => m != mask).toList();
+      mask = others[_demoRandom.nextInt(others.length)];
+    }
+    final buttons = [
+      for (final b in const [GameColors.red, GameColors.green, GameColors.blue])
+        if (mask & b != 0) b,
+    ];
+    // Fingers land a few milliseconds apart, well inside the chord window.
+    for (final (i, b) in buttons.indexed) {
+      Future<void>.delayed(Duration(milliseconds: 25 * i), () {
+        if (mounted) setState(() => _chords.down(-b, b));
+      });
+    }
+    Future<void>.delayed(const Duration(milliseconds: 220), () {
+      _demoPressing = false;
+      if (!mounted) return;
+      setState(() {
+        for (final b in buttons) {
+          _chords.up(-b);
+        }
+      });
+    });
   }
 
   void _tick(Duration elapsed) {
@@ -90,6 +147,14 @@ class _GameScreenState extends State<GameScreen>
   /// unless a tip removed ads. Otherwise a good enough score may offer
   /// leaderboard sign-in.
   Future<void> _afterGameOver() async {
+    if (_kDemo) {
+      // No ads or prompts in the demo. An early loss plays again after a
+      // moment; the planned one at the end stays on the game-over screen.
+      if (_demoGivingUp) return;
+      await Future<void>.delayed(const Duration(seconds: 4));
+      if (mounted) _onOverlayTap();
+      return;
+    }
     setState(() => _overlayReady = false);
     final score = _game.score;
     final lb = LeaderboardService();

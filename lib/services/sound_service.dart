@@ -21,6 +21,11 @@ const _kStart = 'assets/sounds/start.wav';
 
 const _kSoundOn = 'sound_on';
 
+/// Demo builds (see `_kDemo` in game_screen.dart) log every sound with a
+/// wall-clock timestamp, so a soundtrack can be rebuilt for screen
+/// recordings, which the simulator records without audio.
+const _kDemo = bool.fromEnvironment('DEMO');
+
 /// Sound effects through SoLoud, same engine as rigobert: every clip is
 /// decoded to PCM once up front and mixed natively, so playing is instant
 /// and never blocks the platform thread.
@@ -74,6 +79,11 @@ class SoundService extends ChangeNotifier {
     if (!_enabled) return;
     final source = _sources[asset];
     if (source == null) return;
+    if (_kDemo) {
+      debugPrint(
+        'DEMO_SOUND ${DateTime.now().microsecondsSinceEpoch} $asset $volume',
+      );
+    }
     _engine.play(source, volume: volume);
   }
 
