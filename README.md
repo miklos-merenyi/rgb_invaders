@@ -88,6 +88,21 @@ Before a release (the leaderboard is hidden until this is done):
    `android/app/src/main/res/values/games-ids.xml`.
 3. Put both leaderboard IDs in `lib/services/leaderboard_service.dart`.
 
+## Release signing
+
+- **iOS:** automatic signing with the team's Apple Distribution certificate.
+- **Android:** release builds are signed with the upload key named in
+  `android/key.properties` (git-ignored; the keystore itself lives outside the
+  repo). Play App Signing holds the final app signing key. Without
+  `key.properties`, release builds fall back to the debug key.
+
+  ```properties
+  storeFile=/Users/mermik/.android/rgbinvaders.jks
+  storePassword=…
+  keyAlias=rgbinvaders
+  keyPassword=…
+  ```
+
 ## Running
 
 ```sh
