@@ -97,11 +97,12 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/Runner-*
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build ipa --release \
     --export-options-plist=ios/ExportOptionsAppStore.plist
 
-# 2. Add the dSYMs Xcode doesn't make. Frameworks built through Dart native
-#    assets (objective_c, flutter-soloud) and the prebuilt AdMob ones ship
-#    without them, and App Store Connect flags the missing UUIDs.
+# 2. Add the dSYMs Xcode doesn't make (the prebuilt AdMob frameworks, and
+#    anything else without one), since App Store Connect flags missing UUIDs.
+#    The build also leaves a duplicate "objective_c.framework 1.dSYM"; drop it.
 ARCHIVE=build/ios/archive/Runner.xcarchive
 APP="$ARCHIVE/Products/Applications/Runner.app"
+find "$ARCHIVE/dSYMs" -maxdepth 1 -name '* [0-9].dSYM' -exec rm -rf {} +
 for FW_DIR in "$APP"/Frameworks/*.framework; do
     FW=$(basename "$FW_DIR" .framework)
     [ -d "$ARCHIVE/dSYMs/$FW.framework.dSYM" ] && continue
@@ -122,7 +123,7 @@ rm -rf /tmp/ipa-check && mkdir /tmp/ipa-check && \
 #    Organizer → Distribute App → App Store Connect → Upload.
 DATE_DIR=~/Library/Developer/Xcode/Archives/$(date +%Y-%m-%d)
 mkdir -p "$DATE_DIR"
-rm -rf "$DATE_DIR"/RGB\ Invaders*.xcarchive
+find "$DATE_DIR" -maxdepth 1 -name 'RGB Invaders*.xcarchive' -exec rm -rf {} +
 cp -R "$ARCHIVE" "$DATE_DIR/RGB Invaders $(date '+%-m-%-d-%y, %-I.%M %p').xcarchive"
 ```
 
