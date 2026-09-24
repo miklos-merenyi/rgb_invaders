@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../services/ad_service.dart';
+import '../services/leaderboard_service.dart';
 import '../services/purchase_service.dart';
 import '../services/sound_service.dart';
 import '../widgets/tip_jar.dart';
@@ -60,10 +63,15 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  /// Counts the game, then shows an ad every [kAdEveryNGames] games, or the
-  /// tip jar every [kTipPromptEvery] games, unless a tip removed ads.
+  /// Counts the game and submits its score, then shows an ad every
+  /// [kAdEveryNGames] games, or the tip jar every [kTipPromptEvery] games,
+  /// unless a tip removed ads. Otherwise a good enough score may offer
+  /// leaderboard sign-in.
   Future<void> _afterGameOver() async {
     setState(() => _overlayReady = false);
+    final score = _game.score;
+    final lb = LeaderboardService();
+    lb.submitScore(score);
     // Let the player see what hit the bottom before anything pops up.
     await Future<void>.delayed(const Duration(milliseconds: 1000));
     final ps = PurchaseService();
@@ -71,7 +79,64 @@ class _GameScreenState extends State<GameScreen>
     if (ps.shouldShowAd) await AdService().showIfReady();
     if (!mounted) return;
     setState(() => _overlayReady = true);
-    if (ps.shouldShowTipPrompt) await showTipJar(context);
+    if (ps.shouldShowTipPrompt) {
+      await showTipJar(context);
+    } else if (lb.shouldPromptFor(score)) {
+      await _promptLeaderboard(score);
+    }
+  }
+
+  String get _platformGames => Platform.isIOS ? 'Game Center' : 'Play Games';
+
+  /// Offers sign-in so [score] (and later ones) go on the global leaderboard.
+  Future<void> _promptLeaderboard(int score) async {
+    final lb = LeaderboardService();
+    final signIn = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Submit to leaderboard?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Sign in with $_platformGames to put your score on the global '
+          'leaderboard. Your later scores will be submitted automatically.',
+          style: const TextStyle(color: Colors.white60, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'No thanks',
+              style: TextStyle(color: Colors.white38),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Sign in',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
+      ),
+    );
+    // Dismissing the dialog just skips it for this launch.
+    await lb.prompted(declined: signIn == false);
+    if (signIn == true && await lb.signIn()) await lb.submitScore(score);
+  }
+
+  Future<void> _openLeaderboard() async {
+    if (await LeaderboardService().show() || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Couldn't sign in to $_platformGames")),
+    );
   }
 
   void _fire(int mask) {
@@ -189,6 +254,7 @@ class _GameScreenState extends State<GameScreen>
                 style: TextStyle(color: Colors.white, fontSize: 20),
               ),
               const SizedBox(height: 40),
+              if (LeaderboardService().enabled) _buildLeaderboardLink(),
               _buildSupportLink(),
             ],
           ),
@@ -206,6 +272,25 @@ class _GameScreenState extends State<GameScreen>
         icon: Icon(
           _sounds.enabled ? Icons.volume_up : Icons.volume_off,
           color: Colors.white38,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardLink() {
+    return GestureDetector(
+      onTap: _openLeaderboard,
+      child: const Padding(
+        padding: EdgeInsets.all(8),
+        child: Text(
+          '🏆 Leaderboard',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.white54,
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.white24,
+            letterSpacing: 1,
+          ),
         ),
       ),
     );

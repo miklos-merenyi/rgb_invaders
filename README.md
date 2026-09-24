@@ -66,6 +66,28 @@ Before a release:
      `…tip_large`
    - Play Console: `tip_small`, `tip_medium`, `tip_large`
 
+## Leaderboard
+
+One global leaderboard, using Game Center on iOS and Play Games on Android:
+
+- Nothing is submitted until the player signs in, either from the
+  🏆 Leaderboard link on the start and game-over screens, or from a prompt
+  offered once per launch after a score of 20 or more (`kLeaderboardMinScore`).
+  "No thanks" stops the prompt until the player signs in via the link.
+- Once signed in, later launches sign in silently and every score of 20 or
+  more is submitted. The platform keeps each player's best.
+
+Before a release (the leaderboard is hidden until this is done):
+
+1. App Store Connect: enable Game Center for the app and create a Classic
+   leaderboard, e.g. `com.mermik.circles.leaderboard`, sorted high to low.
+   The Game Center entitlement is already in `ios/Runner/Runner.entitlements`.
+2. Play Console: set up Play Games Services, create a leaderboard, add the
+   SHA-1 fingerprints (debug, upload and app signing key) to the credentials,
+   and publish the Play Games configuration. Put the project ID in
+   `android/app/src/main/res/values/games-ids.xml`.
+3. Put both leaderboard IDs in `lib/services/leaderboard_service.dart`.
+
 ## Running
 
 ```sh
@@ -80,5 +102,5 @@ flutter test           # game-logic tests
 - `lib/game/chord_detector.dart`: groups near-simultaneous presses into one colour (same approach as rigobert)
 - `lib/game/color_pad.dart`: the glossy colour buttons and the colour-mix legend
 - `lib/game/game_screen.dart`: game loop (Ticker), multi-touch buttons, overlays
-- `lib/services/`: ads (`ad_service.dart`), tips / ad-free time (`purchase_service.dart`) and sound effects (`sound_service.dart`)
+- `lib/services/`: ads (`ad_service.dart`), tips / ad-free time (`purchase_service.dart`), sound effects (`sound_service.dart`) and the leaderboard (`leaderboard_service.dart`)
 - `lib/widgets/tip_jar.dart`: the tip jar dialog

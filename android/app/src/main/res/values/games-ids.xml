@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Play Games Services project ID.
+         TODO: replace with the numeric ID from Play Console (Play Games
+         Services → Configuration, or "Get resources" on the leaderboards page). -->
+    <string name="game_services_project_id" translatable="false">0</string>
+</resources>

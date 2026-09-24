@@ -101,7 +101,9 @@
       It has no account system and no analytics. It is supported by occasional
       ads served by Google AdMob, which are requested in a child-directed,
       non-personalized mode. The optional tip jar is handled entirely by
-      Apple or Google.
+      Apple or Google. If you choose to sign in, your scores can also be
+      submitted to a global leaderboard (Apple Game Center / Google Play
+      Games). This is entirely opt-in.
     </p>
   </section>
 
@@ -115,6 +117,7 @@
       <span class="pill">Sound on / off setting</span>
       <span class="pill">Number of games played</span>
       <span class="pill">End date of any ad-free period from a tip</span>
+      <span class="pill">Whether you signed in to, or declined, the leaderboard</span>
     </p>
     <p>
       This data is saved using your device's standard local storage
@@ -143,6 +146,30 @@
   </section>
 
   <section>
+    <h2>Leaderboard</h2>
+    <p>
+      Circles optionally integrates with <strong>Apple Game Center</strong>
+      (iOS) and <strong>Google Play Games Services</strong> (Android) to
+      show a global leaderboard. If you sign in, your scores and your
+      platform player identifier (Game Center alias or Google Play player
+      ID) are sent to and stored by Apple or Google respectively.
+    </p>
+    <p>
+      <strong>This feature is opt-in.</strong> Nothing is submitted unless
+      you sign in, either from the Leaderboard link or when the app offers
+      it after a good score. Choosing "No thanks" turns the offer off. To
+      stop submitting scores after signing in, disconnect Circles from Game
+      Center or Google Play Games in your device's settings.
+    </p>
+    <p>
+      We do not receive, store, or process any of this data ourselves. It is
+      handled entirely by the platform. For details, see:
+      <a href="https://www.apple.com/legal/privacy/" target="_blank">Apple Privacy Policy</a> ·
+      <a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a>
+    </p>
+  </section>
+
+  <section>
     <h2>In-app purchases</h2>
     <p>
       Circles offers optional in-app purchases (a tip jar to support
@@ -164,8 +191,8 @@
     <p>
       Apart from Google AdMob, the app uses no third-party analytics,
       advertising SDKs, crash reporters, or tracking libraries. The only
-      network activity is loading ads and the in-app purchase flow, both
-      described above.
+      network activity is loading ads, the in-app purchase flow and the
+      optional leaderboard, all described above.
     </p>
   </section>
 
@@ -177,7 +204,10 @@
       general-audience content, which tells Google to disable personalized
       advertising and to limit data collection in line with children's
       privacy rules such as COPPA and GDPR. In-app purchases are subject to
-      the parental controls of the App Store or Google Play.
+      the parental controls of the App Store or Google Play. The optional
+      leaderboard requires a Game Center or Google Play Games account, which
+      has its own age requirements and parental controls set by Apple and
+      Google.
     </p>
   </section>
 
@@ -200,7 +230,7 @@
 </main>
 
 <footer>
-  Last updated: September 2026 &nbsp;·&nbsp; Circles
+  Last updated: September 2026 (added leaderboard) &nbsp;·&nbsp; Circles
 </footer>
 
 </body>

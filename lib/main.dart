@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'game/game_screen.dart';
 import 'services/ad_service.dart';
+import 'services/leaderboard_service.dart';
 import 'services/purchase_service.dart';
 import 'services/sound_service.dart';
 
@@ -13,6 +14,7 @@ void main() async {
   await PurchaseService().init();
   await AdService().init();
   await SoundService().init();
+  await LeaderboardService().init();
   runApp(const CirclesApp());
 }
 

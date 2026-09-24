@@ -27,6 +27,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Play Games Services project ID, set in res/values/games-ids.xml. -->
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/game_services_project_id" />
+
         <!-- AdMob App ID. This is Google's TEST app ID.
              TODO: replace with the Circles app ID from apps.admob.com. -->
         <meta-data
