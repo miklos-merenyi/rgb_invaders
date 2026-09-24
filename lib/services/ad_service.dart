@@ -31,7 +31,7 @@ String get _interstitialAdUnitId {
 }
 
 /// Show an interstitial ad every N games (unless a tip removed ads).
-const kAdEveryNGames = 5;
+const kAdEveryNGames = 3;
 
 class AdService {
   static final AdService _instance = AdService._();
