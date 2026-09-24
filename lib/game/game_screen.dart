@@ -227,7 +227,7 @@ class _GameScreenState extends State<GameScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(over ? 'GAME OVER' : 'CIRCLES', style: title),
+              Text(over ? 'GAME OVER' : 'RGB INVADERS', style: title),
               const SizedBox(height: 24),
               if (over) ...[
                 Text(

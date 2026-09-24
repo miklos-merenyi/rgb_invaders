@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="Circles"
+        android:label="RGB Invaders"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
@@ -33,7 +33,7 @@
             android:value="@string/game_services_project_id" />
 
         <!-- AdMob App ID. This is Google's TEST app ID.
-             TODO: replace with the Circles app ID from apps.admob.com. -->
+             TODO: replace with the RGB Invaders app ID from apps.admob.com. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />

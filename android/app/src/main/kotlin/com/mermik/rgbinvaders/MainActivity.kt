@@ -1,4 +1,4 @@
-package com.mermik.circles
+package com.mermik.rgbinvaders
 
 import io.flutter.embedding.android.FlutterActivity
 

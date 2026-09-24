@@ -15,16 +15,16 @@ void main() async {
   await AdService().init();
   await SoundService().init();
   await LeaderboardService().init();
-  runApp(const CirclesApp());
+  runApp(const RgbInvadersApp());
 }
 
-class CirclesApp extends StatelessWidget {
-  const CirclesApp({super.key});
+class RgbInvadersApp extends StatelessWidget {
+  const RgbInvadersApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Circles',
+      title: 'RGB Invaders',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: const GameScreen(),

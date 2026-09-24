@@ -8,7 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 // Same setup as rigobert. The kTest* IDs are Google's official test IDs: safe
 // during development, they never generate revenue or policy risk.
 //
-// TODO: create the Circles app and interstitial units in the AdMob console
+// TODO: create the RGB Invaders app and interstitial units in the AdMob console
 // (https://admob.google.com) and fill in the kRelease* IDs below, plus the
 // AdMob *app* IDs in AndroidManifest.xml and ios/Runner/Info.plist.
 // While a release ID is empty, release builds simply show no ads.

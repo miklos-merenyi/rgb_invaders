@@ -1,5 +1,5 @@
-import 'package:circles/game/chord_detector.dart';
-import 'package:circles/game/game.dart';
+import 'package:rgb_invaders/game/chord_detector.dart';
+import 'package:rgb_invaders/game/game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // testWidgets runs in fake time, so tester.pump advances the chord timer.

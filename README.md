@@ -1,4 +1,4 @@
-# Circles
+# RGB Invaders
 
 A small arcade game for Android and iOS, written in Flutter.
 
@@ -56,13 +56,13 @@ Set up the same way as rigobert:
 
 Before a release:
 
-1. Create the Circles app in [AdMob](https://admob.google.com) with one
+1. Create the RGB Invaders app in [AdMob](https://admob.google.com) with one
    interstitial unit per platform. Put the app IDs in
    `android/app/src/main/AndroidManifest.xml` and `ios/Runner/Info.plist`,
    which currently hold Google's test IDs. Put the unit IDs in
    `lib/services/ad_service.dart`. Release builds show no ads until this is done.
 2. Create three consumable in-app products:
-   - App Store Connect: `com.mermik.circles.tip_small`, `…tip_medium`,
+   - App Store Connect: `com.mermik.rgbinvaders.tip_small`, `…tip_medium`,
      `…tip_large`
    - Play Console: `tip_small`, `tip_medium`, `tip_large`
 
@@ -80,7 +80,7 @@ One global leaderboard, using Game Center on iOS and Play Games on Android:
 Before a release (the leaderboard is hidden until this is done):
 
 1. App Store Connect: enable Game Center for the app and create a Classic
-   leaderboard, e.g. `com.mermik.circles.leaderboard`, sorted high to low.
+   leaderboard, e.g. `com.mermik.rgbinvaders.leaderboard`, sorted high to low.
    The Game Center entitlement is already in `ios/Runner/Runner.entitlements`.
 2. Play Console: set up Play Games Services, create a leaderboard, add the
    SHA-1 fingerprints (debug, upload and app signing key) to the credentials,

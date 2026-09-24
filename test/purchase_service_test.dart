@@ -1,4 +1,4 @@
-import 'package:circles/services/purchase_service.dart';
+import 'package:rgb_invaders/services/purchase_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:circles/game/game.dart';
+import 'package:rgb_invaders/game/game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Game _newGame() {

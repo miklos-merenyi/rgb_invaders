@@ -1,6 +1,6 @@
-import 'package:circles/game/color_pad.dart';
-import 'package:circles/game/game.dart';
-import 'package:circles/game/game_screen.dart';
+import 'package:rgb_invaders/game/color_pad.dart';
+import 'package:rgb_invaders/game/game.dart';
+import 'package:rgb_invaders/game/game_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

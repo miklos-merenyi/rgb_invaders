@@ -43,7 +43,7 @@ class TipJarDialog extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Circles is free to play, with an ad every few games. '
+                'RGB Invaders is free to play, with an ad every few games. '
                 'A tip removes ads for a while and stops these popups too.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
