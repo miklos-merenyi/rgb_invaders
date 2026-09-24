@@ -62,3 +62,13 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // AdMob (play-services-ads) only asks for WorkManager 2.7.0, which brings
+    // Room 2.2.5. That Room's R8 rules don't keep the generated database's
+    // constructor, so under R8 full mode (the default since AGP 8) release
+    // builds crashed at launch with "Failed to create an instance of
+    // androidx.work.impl.WorkDatabase". A current WorkManager brings a
+    // current Room, which ships the right rules.
+    implementation("androidx.work:work-runtime:2.12.0")
+}
