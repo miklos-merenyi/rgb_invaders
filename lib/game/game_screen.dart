@@ -38,7 +38,8 @@ class _GameScreenState extends State<GameScreen>
   late final Game _game = (widget.game ?? Game())
     ..onHit = ((_) => _sounds.explosion())
     ..onMiss = _sounds.miss
-    ..onWave = ((_) => _sounds.start());
+    ..onWave = ((_) => _sounds.start())
+    ..onBoss = _sounds.start;
   final _sounds = SoundService();
   late final Ticker _ticker;
   final _frame = ValueNotifier<int>(0);
@@ -85,14 +86,24 @@ class _GameScreenState extends State<GameScreen>
   final _demoRandom = Random();
 
   /// Demo player: presses the buttons for the invader closest to the bottom
-  /// once it's a little way down the screen. It goes through the chord
-  /// detector like real fingers, so the pads light up as in normal play.
+  /// (or the boss's lowest band) once it's a little way down the screen. It
+  /// goes through the chord detector like real fingers, so the pads light up
+  /// as in normal play.
   void _demoTurn() {
     if (_demoPressing || !_game.canFire || _demoGivingUp) return;
-    final target = _game.monsters
-        .where((m) => m.y > 0.2)
-        .fold<Monster?>(null, (a, m) => a == null || m.y > a.y ? m : a);
-    if (target == null) return;
+    final boss = _game.boss;
+    final int target;
+    if (boss != null) {
+      final bottom = _game.bossBandRect(boss, boss.alive - 1).bottom;
+      if (bottom < _game.size.height * 0.2) return;
+      target = boss.target;
+    } else {
+      final lowest = _game.monsters
+          .where((m) => m.y > 0.2)
+          .fold<Monster?>(null, (a, m) => a == null || m.y > a.y ? m : a);
+      if (lowest == null) return;
+      target = lowest.mask;
+    }
     // Vary the reaction time like a person: usually quick, sometimes slow.
     final waitUntil = _demoWaitUntil ??=
         _game.time + 0.05 + pow(_demoRandom.nextDouble(), 2) * 1.2;
@@ -100,7 +111,7 @@ class _GameScreenState extends State<GameScreen>
     _demoWaitUntil = null;
     _demoPressing = true;
     // Now and then pick the wrong colour, as people do.
-    var mask = target.mask;
+    var mask = target;
     if (_demoRandom.nextDouble() < 0.12) {
       final others = GameColors.all.where((m) => m != mask).toList();
       mask = others[_demoRandom.nextInt(others.length)];
@@ -330,8 +341,10 @@ class _GameScreenState extends State<GameScreen>
                   'R+G+B = white.\n'
                   'A circle only destroys a monster of its own colour.\n'
                   'Mixed colours score more: 1 point per button.\n'
-                  'Every 30 monsters a new wave starts slower again,\n'
-                  'but they come in pairs, then threes…',
+                  'Every 25 monsters a new wave starts slower again,\n'
+                  'but they come in pairs, then threes…\n'
+                  'Between waves a boss descends: shoot its\n'
+                  'lowest colour to peel it away, band by band.',
                   textAlign: TextAlign.center,
                   style: body,
                 ),

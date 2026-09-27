@@ -65,8 +65,49 @@ class Pulse {
   double radius = 0;
 }
 
+/// The big banded invader that comes down between waves. Its bands are
+/// shot away from the bottom up, and only the lowest remaining one can be
+/// hit. Shot-away bands stay (see-through) and keep descending with it.
+class Boss {
+  Boss({required this.bands, required this.speed, required this.y});
+
+  /// Sprite rows covered by each band, top to bottom, as (first row, count).
+  static const List<(int, int)> bandRows = [
+    (0, 2),
+    (2, 1),
+    (3, 1),
+    (4, 1),
+    (5, 1),
+    (6, 2),
+  ];
+
+  /// Band colours in the order of the app icon, top to bottom.
+  static const List<int> iconBands = [1, 3, 2, 6, 4, 5];
+
+  /// Band colours, top to bottom, one per entry of [bandRows].
+  final List<int> bands;
+
+  /// Fall speed in play-field heights per second.
+  final double speed;
+
+  /// Top edge as a fraction of the play-field height.
+  double y;
+
+  /// Bands still solid: `bands[0]` to `bands[alive - 1]`.
+  late int alive = bands.length;
+
+  double age = 0;
+
+  /// The only colour that can hit the boss right now.
+  int get target => bands[alive - 1];
+
+  /// Which band a sprite row belongs to.
+  static int bandOf(int row) => bandRows.lastIndexWhere((b) => b.$1 <= row);
+}
+
 class Explosion {
-  Explosion(this.position, this.mask);
+  Explosion(this.position, this.mask, {int? points})
+    : points = points ?? GameColors.buttonsFor(mask);
 
   /// How long the particles fly.
   static const double burstDuration = 0.6;
@@ -76,6 +117,9 @@ class Explosion {
 
   final Offset position;
   final int mask;
+
+  /// Shown as "+N" rising from the explosion.
+  final int points;
   double t = 0;
 
   bool get done => t >= duration;
@@ -92,6 +136,16 @@ class Game {
   final List<Monster> monsters = [];
   final List<Explosion> explosions = [];
   Pulse? pulse;
+  Boss? boss;
+
+  /// True from the last group of a wave until its boss appears.
+  bool _bossPending = false;
+
+  /// Bosses beaten this game; the first one wears the icon's colours.
+  int _bossesBeaten = 0;
+
+  /// Seconds since the current boss appeared (drives its banner).
+  double bossTime = 0;
 
   int score = 0;
   int best = 0;
@@ -120,6 +174,9 @@ class Game {
   /// Called with the new wave number when a wave after the first begins.
   void Function(int wave)? onWave;
 
+  /// Called when a boss appears.
+  void Function()? onBoss;
+
   double get monsterRadius => min(size.width * 0.065, 30);
 
   Offset get origin => Offset(size.width / 2, size.height);
@@ -135,7 +192,7 @@ class Game {
   // The game runs in waves of [waveLength] spawns. Within a wave monsters
   // speed up and come more often; the next wave starts slow again but sends
   // them in bigger groups (pairs, then threes, ...).
-  static const int waveLength = 30;
+  static const int waveLength = 25;
 
   /// Pause between the last spawn of a wave and the first of the next.
   static const double waveBreak = 4.0;
@@ -157,6 +214,32 @@ class Game {
   static double intervalFor(int n) =>
       max(minInterval, startInterval * pow(intervalFactor, n));
 
+  // The boss after wave n falls a little faster than the one before.
+  static const double bossStartSpeed = 0.035;
+  static const double bossSpeedStep = 0.005;
+  static const double bossMaxSpeed = 0.08;
+
+  /// Extra points for shooting away a boss's last band.
+  static const int bossBonus = 10;
+
+  static double bossSpeedFor(int wave) =>
+      min(bossStartSpeed + (wave - 1) * bossSpeedStep, bossMaxSpeed);
+
+  /// Side of one sprite pixel of the boss, in logical pixels.
+  double get bossPixel => min(size.width * 0.62 / 11, 30);
+
+  Offset bossTopLeft(Boss b) {
+    final sway = 0.05 * size.width * sin(b.age * 0.9);
+    return Offset(size.width / 2 - bossPixel * 5.5 + sway, b.y * size.height);
+  }
+
+  /// The area covered by band [i] of the boss.
+  Rect bossBandRect(Boss b, int i) {
+    final px = bossPixel;
+    final (row, rows) = Boss.bandRows[i];
+    return bossTopLeft(b) + Offset(0, row * px) & Size(11 * px, rows * px);
+  }
+
   bool get canFire => phase == GamePhase.playing && pulse == null;
 
   Offset monsterPosition(Monster m) {
@@ -168,6 +251,9 @@ class Game {
     monsters.clear();
     explosions.clear();
     pulse = null;
+    boss = null;
+    _bossPending = false;
+    _bossesBeaten = 0;
     score = 0;
     spawned = 0;
     time = 0;
@@ -198,18 +284,31 @@ class Game {
     time += dt;
     waveTime += dt;
 
-    _spawnTimer -= dt;
-    if (spawning && _spawnTimer <= 0) {
-      _spawnGroup();
-      _waveSpawns++;
-      if (_waveSpawns >= waveLength) {
-        wave++;
-        _waveSpawns = 0;
-        waveTime = 0;
-        _spawnTimer = waveBreak;
-        onWave?.call(wave);
-      } else {
-        _spawnTimer = intervalFor(_waveSpawns);
+    bossTime += dt;
+
+    if (_bossPending) {
+      // The boss waits for the rest of its wave to be cleared.
+      if (monsters.isEmpty) _spawnBoss();
+    } else if (boss == null) {
+      _spawnTimer -= dt;
+      if (spawning && _spawnTimer <= 0) {
+        _spawnGroup();
+        _waveSpawns++;
+        if (_waveSpawns >= waveLength) {
+          _bossPending = true;
+        } else {
+          _spawnTimer = intervalFor(_waveSpawns);
+        }
+      }
+    }
+
+    final b = boss;
+    if (b != null) {
+      b.age += dt;
+      b.y += b.speed * dt;
+      if (bossBandRect(b, b.alive - 1).bottom >= size.height) {
+        _gameOver();
+        return;
       }
     }
 
@@ -247,6 +346,55 @@ class Game {
     }
   }
 
+  void _spawnBoss() {
+    _bossPending = false;
+    final bands = List.of(Boss.iconBands);
+    if (_bossesBeaten > 0) bands.shuffle(_random);
+    boss = Boss(
+      bands: bands,
+      speed: bossSpeedFor(wave),
+      y: -8 * bossPixel / size.height,
+    );
+    bossTime = 0;
+    onBoss?.call();
+  }
+
+  /// Shoots away the boss's lowest band; the last one ends the boss and
+  /// starts the next wave.
+  void _hitBoss(Boss b) {
+    final mask = b.target;
+    final rect = bossBandRect(b, b.alive - 1);
+    b.alive--;
+    var points = GameColors.buttonsFor(mask);
+    if (b.alive == 0) {
+      points += bossBonus;
+      boss = null;
+      _bossesBeaten++;
+      for (var i = 0; i < Boss.bandRows.length; i++) {
+        explosions.add(
+          Explosion(bossBandRect(b, i).center, b.bands[i], points: 0),
+        );
+      }
+      wave++;
+      _waveSpawns = 0;
+      waveTime = 0;
+      _spawnTimer = waveBreak;
+      onWave?.call(wave);
+    }
+    explosions.add(Explosion(rect.center, mask, points: points));
+    score += points;
+    pulse = null;
+    onHit?.call(mask);
+  }
+
+  /// Distance from the launcher to the nearest point of [rect].
+  double _distanceTo(Rect rect) {
+    final o = origin;
+    final dx = max(0.0, max(rect.left - o.dx, o.dx - rect.right));
+    final dy = max(0.0, max(rect.top - o.dy, o.dy - rect.bottom));
+    return sqrt(dx * dx + dy * dy);
+  }
+
   void _updatePulse(double dt) {
     final p = pulse;
     if (p == null) return;
@@ -266,7 +414,13 @@ class Game {
       }
     }
 
-    if (hit != null) {
+    final b = boss;
+    if (hit == null &&
+        b != null &&
+        b.target == p.mask &&
+        p.radius >= _distanceTo(bossBandRect(b, b.alive - 1))) {
+      _hitBoss(b);
+    } else if (hit != null) {
       explosions.add(Explosion(monsterPosition(hit), hit.mask));
       monsters.remove(hit);
       score += GameColors.buttonsFor(hit.mask);

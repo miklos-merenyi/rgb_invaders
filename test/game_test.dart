@@ -19,6 +19,26 @@ Monster _monsterAt(Game g, int mask, double y) => Monster(
   phase: 0, // no sway at age 0
 )..y = y;
 
+/// Fires at the boss's lowest band until it is gone.
+void _beatBoss(Game g) {
+  while (g.boss != null) {
+    g.fire(g.boss!.target);
+    g.update(0.05);
+  }
+}
+
+Game _bossGame() {
+  final g = _newGame();
+  g.boss = Boss(bands: List.of(Boss.iconBands), speed: 0, y: 0.1);
+  return g;
+}
+
+void _runPulse(Game g) {
+  for (var i = 0; i < 120 && g.pulse != null; i++) {
+    g.update(1 / 60);
+  }
+}
+
 void main() {
   test('only one circle at a time', () {
     final g = _newGame();
@@ -71,8 +91,8 @@ void main() {
   });
 
   test('monsters get faster and spawn more often', () {
-    expect(Game.speedFor(30), greaterThan(Game.speedFor(0)));
-    expect(Game.intervalFor(30), lessThan(Game.intervalFor(0)));
+    expect(Game.speedFor(25), greaterThan(Game.speedFor(0)));
+    expect(Game.intervalFor(25), lessThan(Game.intervalFor(0)));
   });
 
   test('points equal the buttons a colour needs', () {
@@ -81,7 +101,7 @@ void main() {
     expect(GameColors.buttonsFor(7), 3);
   });
 
-  test('after a wave of 30, speed resets and monsters come in pairs', () {
+  test('after a wave of 25, speed resets and monsters come in pairs', () {
     final g = Game(random: Random(2))
       ..size = const Size(400, 800)
       ..start();
@@ -91,6 +111,7 @@ void main() {
     final groups = <(int, double)>[];
     while (groups.length < Game.waveLength + 2) {
       g.update(0.05);
+      if (g.boss != null) _beatBoss(g);
       if (g.monsters.isNotEmpty) {
         groups.add((g.monsters.length, g.monsters.first.speed));
         g.monsters.clear(); // keep the game from ending
@@ -117,5 +138,74 @@ void main() {
     for (var i = 1; i < xs.length; i++) {
       expect(xs[i] - xs[i - 1], greaterThan(0.12));
     }
+  });
+
+  test('boss comes after the wave, once the field is clear', () {
+    final g = Game(random: Random(3))
+      ..size = const Size(400, 800)
+      ..start();
+    var bosses = 0;
+    g.onBoss = () => bosses++;
+    var spawns = 0;
+    while (spawns < Game.waveLength) {
+      g.update(0.05);
+      if (g.monsters.isNotEmpty) spawns++;
+      if (spawns < Game.waveLength) g.monsters.clear();
+    }
+    g.update(0.05);
+    expect(g.boss, isNull, reason: 'monsters still on screen');
+    g.monsters.clear();
+    g.update(0.05);
+    expect(g.boss, isNotNull);
+    expect(g.boss!.bands, Boss.iconBands);
+    expect(bosses, 1);
+    // No new monsters while the boss is out.
+    for (var i = 0; i < 100; i++) {
+      g.update(0.05);
+    }
+    expect(g.monsters, isEmpty);
+  });
+
+  test('only the lowest band of the boss can be hit', () {
+    final g = _bossGame();
+    var misses = 0;
+    g.onMiss = () => misses++;
+    final bands = g.boss!.bands;
+    g.fire(bands.first); // top band: passes through
+    _runPulse(g);
+    expect(g.boss!.alive, bands.length);
+    expect(misses, 1);
+
+    g.fire(bands.last);
+    _runPulse(g);
+    expect(g.boss!.alive, bands.length - 1);
+    expect(g.boss!.target, bands[bands.length - 2]);
+    expect(g.score, GameColors.buttonsFor(bands.last));
+  });
+
+  test('shooting away every band beats the boss and starts a wave', () {
+    final g = _bossGame();
+    final waves = <int>[];
+    g.onWave = waves.add;
+    _beatBoss(g);
+    final bandPoints = Boss.iconBands.map(GameColors.buttonsFor);
+    expect(g.score, bandPoints.reduce((a, b) => a + b) + Game.bossBonus);
+    expect(g.wave, 2);
+    expect(waves, [2]);
+    expect(g.phase, GamePhase.playing);
+  });
+
+  test('boss ends the game when its lowest solid band hits the bottom', () {
+    final g = _bossGame();
+    final b = g.boss!;
+    // With its two bottom bands gone the boss can sink further.
+    b.alive = 4;
+    // Band 3 (sprite row 4) ends 5 pixels below the top.
+    b.y = (g.size.height - 5 * g.bossPixel) / g.size.height - 0.01;
+    g.update(1 / 60);
+    expect(g.phase, GamePhase.playing);
+    b.y += 0.02;
+    g.update(1 / 60);
+    expect(g.phase, GamePhase.over);
   });
 }

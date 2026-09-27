@@ -65,28 +65,29 @@ class GamePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     game.size = size;
+    // Shot-away boss bands keep falling past the bottom edge.
+    canvas.clipRect(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, Paint()..color = Colors.black);
     _paintStars(canvas, size);
     _paintPulse(canvas);
     for (final m in game.monsters) {
       _paintMonster(canvas, m);
     }
+    final boss = game.boss;
+    if (boss != null) _paintBoss(canvas, boss);
     for (final e in game.explosions) {
       _paintExplosion(canvas, e);
     }
     _paintLauncher(canvas);
     _paintScore(canvas, size);
     _paintWaveBanner(canvas, size);
+    _paintBossBanner(canvas, size);
   }
 
   static const _bannerDuration = 2.6;
 
   /// "WAVE n" with the group size, fading in and out as a wave begins.
   void _paintWaveBanner(Canvas canvas, Size size) {
-    if (game.phase != GamePhase.playing) return;
-    final t = game.waveTime;
-    if (t >= _bannerDuration) return;
-    final alpha = min(1.0, min(t / 0.3, (_bannerDuration - t) / 0.6));
     final n = game.wave;
     final subtitle = switch (n) {
       1 => null,
@@ -95,10 +96,29 @@ class GamePainter extends CustomPainter {
       4 => 'in fours!',
       _ => '$n at a time!',
     };
+    _paintBanner(canvas, size, game.waveTime, 'WAVE $n', subtitle);
+  }
+
+  void _paintBossBanner(Canvas canvas, Size size) {
+    if (game.boss == null) return;
+    _paintBanner(canvas, size, game.bossTime, 'BOSS', 'hit its lowest colour!');
+  }
+
+  /// A title fading in and out over [_bannerDuration] seconds from [t] = 0.
+  void _paintBanner(
+    Canvas canvas,
+    Size size,
+    double t,
+    String title,
+    String? subtitle,
+  ) {
+    if (game.phase != GamePhase.playing) return;
+    if (t >= _bannerDuration) return;
+    final alpha = min(1.0, min(t / 0.3, (_bannerDuration - t) / 0.6));
     final tp = TextPainter(
       textAlign: TextAlign.center,
       text: TextSpan(
-        text: 'WAVE $n',
+        text: title,
         style: TextStyle(
           color: Colors.white.withValues(alpha: alpha),
           fontSize: 40,
@@ -170,6 +190,50 @@ class GamePainter extends CustomPainter {
     }
   }
 
+  /// The boss in its colour bands. Shot-away bands are drawn see-through,
+  /// and the one that can be hit now pulses.
+  void _paintBoss(Canvas canvas, Boss b) {
+    final px = game.bossPixel;
+    final topLeft = game.bossTopLeft(b);
+    final frame = _spriteFrames[(b.age * 1.5).floor() % 2];
+    final targetGlow = 0.35 + 0.25 * sin(clock() * 8);
+
+    for (var i = 0; i < b.alive; i++) {
+      final rect = game.bossBandRect(b, i);
+      final isTarget = i == b.alive - 1;
+      canvas.drawRect(
+        rect.inflate(px * 0.3),
+        Paint()
+          ..color = GameColors.of(
+            b.bands[i],
+          ).withValues(alpha: isTarget ? targetGlow : 0.18)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, px * 0.8),
+      );
+    }
+
+    for (var row = 0; row < frame.length; row++) {
+      final band = Boss.bandOf(row);
+      final solid = band < b.alive;
+      final paint = Paint()
+        ..color = GameColors.of(
+          b.bands[band],
+        ).withValues(alpha: solid ? 1 : 0.2);
+      final line = frame[row];
+      for (var col = 0; col < line.length; col++) {
+        if (line.codeUnitAt(col) != 0x58) continue; // 'X'
+        canvas.drawRect(
+          Rect.fromLTWH(
+            topLeft.dx + col * px,
+            topLeft.dy + row * px,
+            px + 0.5,
+            px + 0.5,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+
   void _paintPulse(Canvas canvas) {
     final p = game.pulse;
     if (p == null) return;
@@ -200,7 +264,7 @@ class GamePainter extends CustomPainter {
 
   void _paintExplosion(Canvas canvas, Explosion e) {
     if (e.t < Explosion.burstDuration) _paintBurst(canvas, e);
-    _paintPoints(canvas, e);
+    if (e.points > 0) _paintPoints(canvas, e);
   }
 
   void _paintBurst(Canvas canvas, Explosion e) {
@@ -225,7 +289,7 @@ class GamePainter extends CustomPainter {
     final color = GameColors.of(e.mask);
     final tp = TextPainter(
       text: TextSpan(
-        text: '+${GameColors.buttonsFor(e.mask)}',
+        text: '+${e.points}',
         style: TextStyle(
           color: color.withValues(alpha: alpha),
           fontSize: r * (0.9 + 0.3 * min(k * 4, 1)),
