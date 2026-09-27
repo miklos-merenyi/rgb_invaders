@@ -207,12 +207,25 @@ class Game {
   static const double intervalFactor = 0.990;
   static const double minInterval = 0.65;
 
-  /// Fall speed of the n-th group in a wave.
-  static double speedFor(int n) => min(startSpeed + n * speedStep, maxSpeed);
+  // How steeply a wave ramps up, as a multiple of [speedStep] and
+  // [intervalFactor]: steep in wave 1, gentle from wave [lastRampWave] on
+  // (its bigger groups are hard enough), linear in between.
+  static const double firstRamp = 1.5;
+  static const double lastRamp = 0.5;
+  static const int lastRampWave = 4;
 
-  /// Seconds until the group after the n-th one in a wave appears.
-  static double intervalFor(int n) =>
-      max(minInterval, startInterval * pow(intervalFactor, n));
+  static double rampFor(int wave) {
+    final k = (wave - 1).clamp(0, lastRampWave - 1) / (lastRampWave - 1);
+    return firstRamp + (lastRamp - firstRamp) * k;
+  }
+
+  /// Fall speed of the n-th group in [wave].
+  static double speedFor(int n, int wave) =>
+      min(startSpeed + n * speedStep * rampFor(wave), maxSpeed);
+
+  /// Seconds until the group after the n-th one in [wave] appears.
+  static double intervalFor(int n, int wave) =>
+      max(minInterval, startInterval * pow(intervalFactor, n * rampFor(wave)));
 
   // The boss after wave n falls a little faster than the one before.
   static const double bossStartSpeed = 0.035;
@@ -309,7 +322,7 @@ class Game {
         if (_waveSpawns >= waveLength) {
           _bossPending = true;
         } else {
-          _spawnTimer = intervalFor(_waveSpawns);
+          _spawnTimer = intervalFor(_waveSpawns, wave);
         }
       }
     }
@@ -352,7 +365,7 @@ class Game {
           mask: GameColors.all[_random.nextInt(GameColors.all.length)],
           baseX:
               margin + lane * (i + 0.5) + (_random.nextDouble() - 0.5) * jitter,
-          speed: speedFor(_waveSpawns),
+          speed: speedFor(_waveSpawns, wave),
           phase: phase,
         )..y = -monsterRadius / size.height,
       );

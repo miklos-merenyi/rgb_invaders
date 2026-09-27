@@ -91,8 +91,19 @@ void main() {
   });
 
   test('monsters get faster and spawn more often', () {
-    expect(Game.speedFor(25), greaterThan(Game.speedFor(0)));
-    expect(Game.intervalFor(25), lessThan(Game.intervalFor(0)));
+    expect(Game.speedFor(25, 1), greaterThan(Game.speedFor(0, 1)));
+    expect(Game.intervalFor(25, 1), lessThan(Game.intervalFor(0, 1)));
+  });
+
+  test('wave 1 ramps up fastest, easing off until wave 4', () {
+    final speeds = [for (var w = 1; w <= 5; w++) Game.speedFor(25, w)];
+    final gaps = [for (var w = 1; w <= 5; w++) Game.intervalFor(25, w)];
+    for (var i = 1; i < 4; i++) {
+      expect(speeds[i], lessThan(speeds[i - 1]));
+      expect(gaps[i], greaterThan(gaps[i - 1]));
+    }
+    expect(speeds[4], speeds[3]); // wave 5 on ramps like wave 4
+    expect(Game.speedFor(0, 4), Game.startSpeed);
   });
 
   test('points equal the buttons a colour needs', () {
