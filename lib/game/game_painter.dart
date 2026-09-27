@@ -306,11 +306,15 @@ class GamePainter extends CustomPainter {
     tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 
-  /// Half-circle at the bottom centre showing the colour about to be fired.
+  /// Half-circle at the bottom centre showing the colour about to be fired,
+  /// or the colour of the circle still out.
   void _paintLauncher(Canvas canvas) {
+    final pulse = game.pulse;
     final held = heldMask();
     final ready = game.canFire;
-    final color = held != 0
+    final color = pulse != null
+        ? GameColors.of(pulse.mask)
+        : held != 0
         ? GameColors.of(held)
         : Colors.white.withValues(alpha: ready ? 0.35 : 0.12);
     final r = game.monsterRadius * 0.9;
@@ -320,7 +324,8 @@ class GamePainter extends CustomPainter {
       pi,
       pi,
       true,
-      Paint()..color = ready ? color : color.withValues(alpha: 0.3),
+      Paint()
+        ..color = ready || pulse != null ? color : color.withValues(alpha: 0.3),
     );
   }
 

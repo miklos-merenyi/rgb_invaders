@@ -50,6 +50,35 @@ python3 -c "import sys; from PIL import Image; [Image.open(f).convert('RGB').sav
 
 Drop `--dart-define=DEMO=true` (and rebuild) for a normal simulator build.
 
+## Gameplay videos
+
+`store_assets/video/` holds a 1080×1920 and a 1920×1080 video (the latter is
+the game on `landscape_bg.png`). Build and install the DEMO app as above, on
+the **iPhone 17 Pro Max** simulator (1320×2868). The demo gives up after 108 s
+so a ~2-minute recording ends on game over.
+
+```sh
+xcrun simctl io $SIM recordVideo --codec=h264 --force raw.mp4 &   # Ctrl-C / kill -INT after ~140 s
+xcrun simctl launch $SIM com.mermik.rgbinvaders
+# afterwards: the demo's sound log (--console doesn't show Flutter prints)
+xcrun simctl spawn $SIM log show --last 10m --style compact \
+    --predicate 'eventMessage CONTAINS "DEMO_"' | grep -o 'DEMO_SOUND.*' > events.txt
+```
+
+Simulator recordings are silent and have out-of-order timestamps, so:
+
+1. Convert to constant 60 fps: `ffmpeg -i raw.mp4 -vf fps=60 -crf 12 cfr.mp4`.
+2. Find TAP, the video time the start overlay vanishes (the first
+   `start.wav`): a sharp drop in brightness a few seconds after the app
+   appears, e.g. via `signalstats` YAVG per frame.
+3. Mix the soundtrack: each `DEMO_SOUND <µs> <asset> <volume>` goes at
+   `TAP + (µs − first start.wav µs)/1e6 − START` seconds, where
+   START = TAP − 2.6 s (a short look at the title screen). Normalise if it
+   clips.
+4. Cut 124.5 s from START. Portrait: scale to 884×1920, pad to 1080×1920 on
+   black. Landscape: scale to 498×1080 and overlay at x=711 on
+   `landscape_bg.png`. H.264 CRF 20, 60 fps, AAC 96k.
+
 ## Before every release
 
 Bump the build number in `pubspec.yaml` (`version: 1.0.0+N`). Both stores
