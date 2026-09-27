@@ -245,18 +245,21 @@ class GamePainter extends CustomPainter {
       p.radius,
       Paint()..color = color.withValues(alpha: 0.07),
     );
-    canvas.drawCircle(
-      game.origin,
-      p.radius,
+    // The rings are paths, not drawCircle: Impeller draws stroked circles
+    // with a per-pixel distance that overflows on low-precision GPUs (seen
+    // on a Moto G50), so big rings lost their sharp edge.
+    final ring = Path()
+      ..addOval(Rect.fromCircle(center: game.origin, radius: p.radius));
+    canvas.drawPath(
+      ring,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 10
         ..color = color.withValues(alpha: 0.35)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
-    canvas.drawCircle(
-      game.origin,
-      p.radius,
+    canvas.drawPath(
+      ring,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4
