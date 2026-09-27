@@ -48,7 +48,12 @@ Simulator screenshots have an alpha channel, which App Store Connect rejects:
 python3 -c "import sys; from PIL import Image; [Image.open(f).convert('RGB').save(f) for f in sys.argv[1:]]" shot*.png
 ```
 
-Drop `--dart-define=DEMO=true` (and rebuild) for a normal simulator build.
+The define stays in `ios/Flutter/Generated.xcconfig`, so builds started from
+Xcode keep playing the demo until it's rewritten without it:
+
+```sh
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build ios --config-only --debug
+```
 
 ## Gameplay videos
 

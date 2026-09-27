@@ -325,7 +325,9 @@ class _GameScreenState extends State<GameScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(over ? 'GAME OVER' : 'RGB INVADERS', style: title),
+              over
+                  ? _rainbowText('GAME OVER', title)
+                  : const Text('RGB INVADERS', style: title),
               const SizedBox(height: 24),
               if (over) ...[
                 Text(
@@ -361,6 +363,32 @@ class _GameScreenState extends State<GameScreen>
         ),
       ),
     );
+  }
+
+  /// [text] with each letter in the next colour of the boss's bands (the
+  /// app icon's rainbow), glowing in its own colour.
+  Widget _rainbowText(String text, TextStyle style) {
+    final letters = <TextSpan>[];
+    var i = 0;
+    for (final ch in text.split('')) {
+      if (ch == ' ') {
+        letters.add(TextSpan(text: ch, style: style));
+        continue;
+      }
+      final color = GameColors.of(Boss.iconBands[i++ % Boss.iconBands.length]);
+      letters.add(
+        TextSpan(
+          text: ch,
+          style: style.copyWith(
+            color: color,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.7), blurRadius: 16),
+            ],
+          ),
+        ),
+      );
+    }
+    return Text.rich(TextSpan(children: letters));
   }
 
   Widget _buildMuteButton() {
