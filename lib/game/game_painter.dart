@@ -89,13 +89,15 @@ class GamePainter extends CustomPainter {
   /// "WAVE n" with the group size, fading in and out as a wave begins.
   void _paintWaveBanner(Canvas canvas, Size size) {
     final n = game.wave;
-    final subtitle = switch (n) {
-      1 => null,
-      2 => 'in pairs!',
-      3 => 'in threes!',
-      4 => 'in fours!',
-      _ => '$n at a time!',
-    };
+    final subtitle = n > Game.maxGroupSize
+        ? 'faster!'
+        : switch (n) {
+            1 => null,
+            2 => 'in pairs!',
+            3 => 'in threes!',
+            4 => 'in fours!',
+            _ => '$n at a time!',
+          };
     _paintBanner(canvas, size, game.waveTime, 'WAVE $n', subtitle);
   }
 

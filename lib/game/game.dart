@@ -153,7 +153,8 @@ class Game {
   double time = 0;
   double _spawnTimer = 0;
 
-  /// Current wave (1-based). Wave n sends monsters in groups of n.
+  /// Current wave (1-based). Wave n sends monsters in groups of n, up to
+  /// [maxGroupSize].
   int wave = 1;
 
   /// Groups spawned so far in the current wave.
@@ -191,19 +192,29 @@ class Game {
   // ── Difficulty tuning ──────────────────────────────────────────────────
   // The game runs in waves of [waveLength] spawns. Within a wave monsters
   // speed up and come more often; the next wave starts slow again but sends
-  // them in bigger groups (pairs, then threes, ...).
+  // them in bigger groups (pairs, then threes, ...). Groups stop growing at
+  // [maxGroupSize], which is as many as fit side by side on a phone; later
+  // waves start faster instead.
   static const int waveLength = 25;
+  static const int maxGroupSize = 5;
+
+  /// Monsters per group in [wave].
+  static int groupSizeFor(int wave) => min(wave, maxGroupSize);
 
   /// Pause between the last spawn of a wave and the first of the next.
   static const double waveBreak = 4.0;
 
   // Fall speed is in play-field heights per second (0.07 ≈ 14 s to fall).
   static const double startSpeed = 0.07;
+  static const double lateWaveSpeedStep = 0.01; // per wave past maxGroupSize
   static const double speedStep = 0.0012; // added per monster
   static const double maxSpeed = 0.40;
 
   // Gap between monsters in seconds, shrinking by a factor per monster.
+  // Each wave opens with a slightly longer gap than the one before while
+  // its groups grow.
   static const double startInterval = 2.6;
+  static const double startIntervalStep = 0.2;
   static const double intervalFactor = 0.990;
   static const double minInterval = 0.65;
 
@@ -219,13 +230,23 @@ class Game {
     return firstRamp + (lastRamp - firstRamp) * k;
   }
 
+  /// Fall speed of the first group in [wave].
+  static double startSpeedFor(int wave) =>
+      startSpeed + max(0, wave - maxGroupSize) * lateWaveSpeedStep;
+
   /// Fall speed of the n-th group in [wave].
   static double speedFor(int n, int wave) =>
-      min(startSpeed + n * speedStep * rampFor(wave), maxSpeed);
+      min(startSpeedFor(wave) + n * speedStep * rampFor(wave), maxSpeed);
+
+  /// Gap before the second group of [wave].
+  static double startIntervalFor(int wave) =>
+      startInterval + (groupSizeFor(wave) - 1) * startIntervalStep;
 
   /// Seconds until the group after the n-th one in [wave] appears.
-  static double intervalFor(int n, int wave) =>
-      max(minInterval, startInterval * pow(intervalFactor, n * rampFor(wave)));
+  static double intervalFor(int n, int wave) => max(
+    minInterval,
+    startIntervalFor(wave) * pow(intervalFactor, n * rampFor(wave)),
+  );
 
   // The boss after wave n falls a little faster than the one before.
   static const double bossStartSpeed = 0.035;
@@ -352,14 +373,15 @@ class Game {
     _updatePulse(dt);
   }
 
-  /// Spawns [wave] monsters side by side, each in its own lane. They share
-  /// a sway phase so the group moves in formation and never overlaps.
+  /// Spawns a group of monsters side by side, each in its own lane. They
+  /// share a sway phase so the group moves in formation and never overlaps.
   void _spawnGroup() {
     const margin = 0.12;
-    final lane = (1 - 2 * margin) / wave;
+    final count = groupSizeFor(wave);
+    final lane = (1 - 2 * margin) / count;
     final jitter = max(0.0, lane - 0.14);
     final phase = _random.nextDouble() * pi * 2;
-    for (var i = 0; i < wave; i++) {
+    for (var i = 0; i < count; i++) {
       monsters.add(
         Monster(
           mask: GameColors.all[_random.nextInt(GameColors.all.length)],

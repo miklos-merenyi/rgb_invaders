@@ -95,6 +95,29 @@ void main() {
     expect(Game.intervalFor(25, 1), lessThan(Game.intervalFor(0, 1)));
   });
 
+  test('each wave opens with a slightly longer gap', () {
+    expect(Game.intervalFor(0, 1), Game.startInterval);
+    for (var w = 2; w <= Game.maxGroupSize; w++) {
+      expect(Game.intervalFor(0, w), greaterThan(Game.intervalFor(0, w - 1)));
+    }
+    expect(Game.intervalFor(0, 20), Game.intervalFor(0, Game.maxGroupSize));
+  });
+
+  test('groups stop growing at five; later waves start faster', () {
+    final g = Game(random: Random(4))
+      ..size = const Size(400, 800)
+      ..start()
+      ..wave = 8;
+    while (g.monsters.isEmpty) {
+      g.update(0.05);
+    }
+    expect(g.monsters, hasLength(Game.maxGroupSize));
+    expect(g.monsters.first.speed, Game.startSpeedFor(8));
+    expect(Game.startSpeedFor(5), Game.startSpeed);
+    expect(Game.startSpeedFor(6), greaterThan(Game.startSpeedFor(5)));
+    expect(Game.startSpeedFor(7), greaterThan(Game.startSpeedFor(6)));
+  });
+
   test('wave 1 ramps up fastest, easing off until wave 4', () {
     final speeds = [for (var w = 1; w <= 5; w++) Game.speedFor(25, w)];
     final gaps = [for (var w = 1; w <= 5; w++) Game.intervalFor(25, w)];

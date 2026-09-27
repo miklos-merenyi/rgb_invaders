@@ -19,7 +19,7 @@ the bottom of the screen:
 - The game runs in waves of 25. Within a wave, monsters fall faster and
   appear more often. Each new wave starts at the slow opening pace again,
   but sends monsters in bigger groups: one at a time, then pairs, threes and
-  so on.
+  so on up to five. After that, each wave starts faster instead.
 - Between waves a banded boss slowly descends. Only a circle in the colour
   of its lowest solid band can hit it; that band turns see-through, and the
   boss is beaten once every band is gone.
