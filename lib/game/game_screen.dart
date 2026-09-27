@@ -327,7 +327,7 @@ class _GameScreenState extends State<GameScreen>
             children: [
               over
                   ? _rainbowText('GAME OVER', title)
-                  : const Text('RGB INVADERS', style: title),
+                  : _rainbowText('RGB INVADERS', title, colors: _titleColors),
               const SizedBox(height: 24),
               if (over) ...[
                 Text(
@@ -353,7 +353,11 @@ class _GameScreenState extends State<GameScreen>
               const SizedBox(height: 32),
               const Text(
                 'Tap to play',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 40),
               if (LeaderboardService().enabled) _buildLeaderboardLink(),
@@ -365,9 +369,21 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  /// [text] with each letter in the next colour of the boss's bands (the
-  /// app icon's rainbow), glowing in its own colour.
-  Widget _rainbowText(String text, TextStyle style) {
+  /// "RGB" in its own colours, then "INVADERS" in the icon's rainbow.
+  static const _titleColors = [
+    GameColors.red,
+    GameColors.green,
+    GameColors.blue,
+    ...Boss.iconBands,
+  ];
+
+  /// [text] with each letter in the next of [colors] (by default the boss's
+  /// bands, i.e. the app icon's rainbow), glowing in its own colour.
+  Widget _rainbowText(
+    String text,
+    TextStyle style, {
+    List<int> colors = Boss.iconBands,
+  }) {
     final letters = <TextSpan>[];
     var i = 0;
     for (final ch in text.split('')) {
@@ -375,7 +391,7 @@ class _GameScreenState extends State<GameScreen>
         letters.add(TextSpan(text: ch, style: style));
         continue;
       }
-      final color = GameColors.of(Boss.iconBands[i++ % Boss.iconBands.length]);
+      final color = GameColors.of(colors[i++ % colors.length]);
       letters.add(
         TextSpan(
           text: ch,

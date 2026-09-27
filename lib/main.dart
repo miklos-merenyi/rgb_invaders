@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,7 +14,13 @@ void main() async {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   await PurchaseService().init();
-  await AdService().init();
+  // Not awaited: the ads SDK's start-up is slow on older phones and no ad
+  // is needed before the first game over.
+  unawaited(
+    AdService().init().catchError(
+      (Object e) => debugPrint('[AdService] init failed: $e'),
+    ),
+  );
   await SoundService().init();
   await LeaderboardService().init();
   runApp(const RgbInvadersApp());
