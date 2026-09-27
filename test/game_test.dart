@@ -244,6 +244,20 @@ void main() {
     expect(g.score, GameColors.buttonsFor(bands.last));
   });
 
+  test('a wrong colour pushes the boss down one row, once', () {
+    final g = _bossGame();
+    final b = g.boss!;
+    final y0 = b.y;
+    g.fire(b.bands.first); // not the lowest band
+    _runPulse(g);
+    for (var i = 0; i < 30; i++) {
+      g.update(1 / 60);
+    }
+    expect(b.alive, b.bands.length);
+    expect(b.push, 0);
+    expect(b.y, closeTo(y0 + g.bossPixel / g.size.height, 1e-9));
+  });
+
   test('shooting away every band beats the boss and starts a wave', () {
     final g = _bossGame();
     final waves = <int>[];

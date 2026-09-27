@@ -63,6 +63,9 @@ class Pulse {
 
   /// Radius in logical pixels.
   double radius = 0;
+
+  /// Whether this circle, in the wrong colour, has already pushed the boss.
+  bool pushedBoss = false;
 }
 
 /// The big banded invader that comes down between waves. Its bands are
@@ -97,6 +100,10 @@ class Boss {
   late int alive = bands.length;
 
   double age = 0;
+
+  /// Distance still to be pushed down by wrong-coloured circles, as a
+  /// fraction of the play-field height.
+  double push = 0;
 
   /// The only colour that can hit the boss right now.
   int get target => bands[alive - 1];
@@ -258,6 +265,10 @@ class Game {
   static const double bossEntrySpeed = 0.4;
   static const double bossEntryY = 0.02;
 
+  /// A wrong-coloured circle reaching the boss pushes it down one sprite
+  /// row, at this speed (play-field heights per second).
+  static const double bossPushSpeed = 0.15;
+
   /// Extra points for shooting away a boss's last band.
   static const int bossBonus = 10;
 
@@ -351,9 +362,11 @@ class Game {
     final b = boss;
     if (b != null) {
       b.age += dt;
+      final push = min(b.push, bossPushSpeed * dt);
+      b.push -= push;
       b.y = bossEntering
           ? min(b.y + bossEntrySpeed * dt, bossEntryY)
-          : b.y + b.speed * dt;
+          : b.y + b.speed * dt + push;
       if (bossBandRect(b, b.alive - 1).bottom >= size.height) {
         _gameOver();
         return;
@@ -464,11 +477,14 @@ class Game {
     }
 
     final b = boss;
-    if (hit == null &&
-        b != null &&
-        b.target == p.mask &&
-        p.radius >= _distanceTo(bossBandRect(b, b.alive - 1))) {
+    final reachedBoss =
+        b != null && p.radius >= _distanceTo(bossBandRect(b, b.alive - 1));
+    if (hit == null && reachedBoss && b.target == p.mask) {
       _hitBoss(b);
+    } else if (hit == null && reachedBoss && !p.pushedBoss) {
+      // Wrong colour: it passes through, but the boss lurches closer.
+      p.pushedBoss = true;
+      b.push += bossPixel / size.height;
     } else if (hit != null) {
       explosions.add(Explosion(monsterPosition(hit), hit.mask));
       monsters.remove(hit);
