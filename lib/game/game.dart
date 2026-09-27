@@ -219,6 +219,11 @@ class Game {
   static const double bossSpeedStep = 0.005;
   static const double bossMaxSpeed = 0.08;
 
+  /// A new boss drops in at this speed until its top is at [bossEntryY];
+  /// the launcher is locked until then.
+  static const double bossEntrySpeed = 0.4;
+  static const double bossEntryY = 0.02;
+
   /// Extra points for shooting away a boss's last band.
   static const int bossBonus = 10;
 
@@ -240,7 +245,14 @@ class Game {
     return bossTopLeft(b) + Offset(0, row * px) & Size(11 * px, rows * px);
   }
 
-  bool get canFire => phase == GamePhase.playing && pulse == null;
+  /// True while a new boss is still dropping into view.
+  bool get bossEntering {
+    final b = boss;
+    return b != null && b.y < bossEntryY;
+  }
+
+  bool get canFire =>
+      phase == GamePhase.playing && pulse == null && !bossEntering;
 
   Offset monsterPosition(Monster m) {
     final sway = 0.04 * sin(m.age * 1.8 + m.phase);
@@ -305,7 +317,9 @@ class Game {
     final b = boss;
     if (b != null) {
       b.age += dt;
-      b.y += b.speed * dt;
+      b.y = bossEntering
+          ? min(b.y + bossEntrySpeed * dt, bossEntryY)
+          : b.y + b.speed * dt;
       if (bossBandRect(b, b.alive - 1).bottom >= size.height) {
         _gameOver();
         return;

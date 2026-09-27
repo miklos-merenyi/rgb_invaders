@@ -166,6 +166,33 @@ void main() {
     expect(g.monsters, isEmpty);
   });
 
+  test('a new boss drops in quickly and the launcher waits for it', () {
+    final g = _newGame();
+    g.boss = Boss(
+      bands: List.of(Boss.iconBands),
+      speed: Game.bossStartSpeed,
+      y: -8 * g.bossPixel / g.size.height,
+    );
+    expect(g.canFire, isFalse);
+    expect(g.fire(GameColors.red | GameColors.blue), isFalse);
+    var t = 0.0;
+    while (!g.canFire) {
+      g.update(1 / 60);
+      t += 1 / 60;
+    }
+    expect(t, lessThan(1.0));
+    expect(g.boss!.y, Game.bossEntryY);
+    expect(g.bossBandRect(g.boss!, 0).top, greaterThanOrEqualTo(0));
+    // From then on it falls at its normal speed.
+    for (var i = 0; i < 10; i++) {
+      g.update(0.05);
+    }
+    expect(
+      g.boss!.y,
+      closeTo(Game.bossEntryY + 0.5 * Game.bossStartSpeed, 1e-9),
+    );
+  });
+
   test('only the lowest band of the boss can be hit', () {
     final g = _bossGame();
     var misses = 0;
