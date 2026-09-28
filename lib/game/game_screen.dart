@@ -157,9 +157,9 @@ class _GameScreenState extends State<GameScreen>
   }
 
   /// Counts the game and submits its score, then shows an ad once
-  /// [kAdMinGames] games and [kAdMinGap] have passed since the last one, or
-  /// the tip jar every [kTipPromptEvery] games,
-  /// unless a tip removed ads. Otherwise a good enough score may offer
+  /// [kAdMinGames] games and [kAdMinGap] have passed since the last one,
+  /// followed by the tip jar every [kTipJarEveryNthBreak]th time, unless a
+  /// tip removed ads. Otherwise a good enough score may offer
   /// leaderboard sign-in.
   Future<void> _afterGameOver() async {
     if (_kDemo) {
@@ -178,15 +178,14 @@ class _GameScreenState extends State<GameScreen>
     await Future<void>.delayed(const Duration(milliseconds: 1000));
     final ps = PurchaseService();
     await ps.incrementGames();
-    // An ad that wasn't loaded yet leaves the next game due one.
-    if (ps.shouldShowAd && await AdService().showIfReady()) {
-      await ps.adBreakShown();
+    final tipJar = ps.tipJarDue;
+    if (ps.adBreakDue) {
+      await AdService().showIfReady();
+      await ps.adBreakTaken();
     }
     if (!mounted) return;
     setState(() => _overlayReady = true);
-    if (ps.shouldShowTipPrompt) {
-      await ps.adBreakShown();
-      if (!mounted) return;
+    if (tipJar) {
       await showTipJar(context);
     } else if (lb.shouldPromptFor(score)) {
       await _promptLeaderboard(score);

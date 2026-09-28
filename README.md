@@ -54,10 +54,10 @@ Set up the same way as rigobert:
 
 - An interstitial ad is shown after a game once at least 2 games
   (`kAdMinGames`) and 180 seconds (`kAdMinGap`) have passed since the last
-  ad, so quick losses don't bring up an ad every minute. On a fresh install
-  the time counts from first launch. If no ad is loaded, the next game tries
-  again.
-- Every 20th game shows the tip jar instead of the ad (`kTipPromptEvery`).
+  ad break, so quick losses don't bring up an ad every minute. On a fresh
+  install the time counts from first launch. A break counts even if no ad
+  was loaded.
+- Every 3rd ad break shows the tip jar after the ad (`kTipJarEveryNthBreak`).
   The tip jar can also be opened any time from the start and game-over screens.
 - A tip removes ads for a while: small = 1 month, medium = 3 months,
   royal = 1 year. Tips stack, and the time is stored on the device.

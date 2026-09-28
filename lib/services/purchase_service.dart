@@ -28,16 +28,17 @@ final kAllProductIds = {kProductTipS, kProductTipM, kProductTipL};
 /// tip extends whatever ad-free time is left rather than replacing it.
 final kAdFreeMonths = {kProductTipS: 1, kProductTipM: 3, kProductTipL: 12};
 
-/// Show the tip jar every N games (in place of that game's ad), as long as
-/// ads aren't currently suppressed. It counts as an ad break for
-/// [kAdMinGames] and [kAdMinGap].
-const kTipPromptEvery = 20;
+/// Every Nth ad break shows the tip jar after its ad, so it follows the same
+/// [kAdMinGames] and [kAdMinGap] rule and never shows while a tip keeps ads
+/// away.
+const kTipJarEveryNthBreak = 3;
 
 // ── SharedPreferences keys ────────────────────────────────────────────────────
 const _kAdsFreeUntilMs = 'ads_free_until_ms';
 const _kGamesPlayed = 'games_played';
 const _kGamesSinceAd = 'games_since_ad';
 const _kLastAdMs = 'last_ad_ms';
+const _kBreaksSinceTipJar = 'breaks_since_tip_jar';
 
 class PurchaseService extends ChangeNotifier {
   static final PurchaseService _instance = PurchaseService._();
@@ -52,6 +53,7 @@ class PurchaseService extends ChangeNotifier {
   DateTime? _adsFreeUntil;
   int _gamesPlayed = 0;
   int _gamesSinceAd = 0;
+  int _breaksSinceTipJar = 0;
   // Starts at first launch, so a new player also waits [kAdMinGap].
   late DateTime _lastAdAt = clock();
 
@@ -73,16 +75,16 @@ class PurchaseService extends ChangeNotifier {
   bool get adsRemoved =>
       _adsFreeUntil != null && _adsFreeUntil!.isAfter(DateTime.now());
 
-  /// True when the game just finished should be followed by the tip jar.
-  bool get shouldShowTipPrompt =>
-      !adsRemoved && _gamesPlayed > 0 && _gamesPlayed % kTipPromptEvery == 0;
-
-  /// True when the game just finished should be followed by an ad.
-  bool get shouldShowAd =>
+  /// True when the game just finished should be followed by an ad: enough
+  /// games and time have passed since the last ad break.
+  bool get adBreakDue =>
       !adsRemoved &&
-      !shouldShowTipPrompt &&
       _gamesSinceAd >= kAdMinGames &&
       clock().difference(_lastAdAt) >= kAdMinGap;
+
+  /// True when this ad break should also show the tip jar after the ad.
+  bool get tipJarDue =>
+      adBreakDue && _breaksSinceTipJar >= kTipJarEveryNthBreak - 1;
 
   ProductDetails? product(String id) => _products[id];
 
@@ -90,6 +92,7 @@ class PurchaseService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _gamesPlayed = prefs.getInt(_kGamesPlayed) ?? 0;
     _gamesSinceAd = prefs.getInt(_kGamesSinceAd) ?? 0;
+    _breaksSinceTipJar = prefs.getInt(_kBreaksSinceTipJar) ?? 0;
     final lastAdMs = prefs.getInt(_kLastAdMs);
     if (lastAdMs != null) {
       _lastAdAt = DateTime.fromMillisecondsSinceEpoch(lastAdMs);
@@ -137,14 +140,18 @@ class PurchaseService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Restarts the count towards the next ad. Call after an ad was actually
-  /// shown, or the tip jar was shown in its place.
-  Future<void> adBreakShown() async {
+  /// Ends a due ad break, whether or not an ad was loaded to show, and
+  /// restarts the count towards the next one. Counting breaks without an ad
+  /// keeps the tip jar coming when no ads load, e.g. before the release ad
+  /// unit IDs are set.
+  Future<void> adBreakTaken() async {
+    _breaksSinceTipJar = tipJarDue ? 0 : _breaksSinceTipJar + 1;
     _gamesSinceAd = 0;
     _lastAdAt = clock();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kGamesSinceAd, 0);
     await prefs.setInt(_kLastAdMs, _lastAdAt.millisecondsSinceEpoch);
+    await prefs.setInt(_kBreaksSinceTipJar, _breaksSinceTipJar);
   }
 
   Future<void> buyTip(String productId) async {
