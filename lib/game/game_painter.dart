@@ -214,11 +214,10 @@ class GamePainter extends CustomPainter {
     }
 
     for (var row = 0; row < frame.length; row++) {
-      final band = Boss.bandOf(row);
-      final solid = band < b.alive;
+      final solid = row < b.alive;
       final paint = Paint()
         ..color = GameColors.of(
-          b.bands[band],
+          b.bands[row],
         ).withValues(alpha: solid ? 1 : 0.2);
       final line = frame[row];
       for (var col = 0; col < line.length; col++) {

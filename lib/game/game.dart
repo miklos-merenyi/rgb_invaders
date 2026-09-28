@@ -9,6 +9,9 @@ class GameColors {
 
   static const List<int> all = [1, 2, 3, 4, 5, 6, 7];
 
+  /// The app icon's rainbow, top to bottom.
+  static const List<int> rainbow = [1, 3, 2, 6, 4, 5];
+
   /// Indexed by mask: none, R, G, R+G, B, R+B, G+B, R+G+B.
   static const List<Color> _palette = [
     Color(0xFF555555),
@@ -74,20 +77,10 @@ class Pulse {
 class Boss {
   Boss({required this.bands, required this.speed, required this.y});
 
-  /// Sprite rows covered by each band, top to bottom, as (first row, count).
-  static const List<(int, int)> bandRows = [
-    (0, 2),
-    (2, 1),
-    (3, 1),
-    (4, 1),
-    (5, 1),
-    (6, 2),
-  ];
+  /// One band per sprite row.
+  static const int bandCount = 8;
 
-  /// Band colours in the order of the app icon, top to bottom.
-  static const List<int> iconBands = [1, 3, 2, 6, 4, 5];
-
-  /// Band colours, top to bottom, one per entry of [bandRows].
+  /// Band colours, top to bottom, one per sprite row.
   final List<int> bands;
 
   /// Fall speed in play-field heights per second.
@@ -107,9 +100,6 @@ class Boss {
 
   /// The only colour that can hit the boss right now.
   int get target => bands[alive - 1];
-
-  /// Which band a sprite row belongs to.
-  static int bandOf(int row) => bandRows.lastIndexWhere((b) => b.$1 <= row);
 }
 
 class Explosion {
@@ -147,9 +137,6 @@ class Game {
 
   /// True from the last group of a wave until its boss appears.
   bool _bossPending = false;
-
-  /// Bosses beaten this game; the first one wears the icon's colours.
-  int _bossesBeaten = 0;
 
   /// Seconds since the current boss appeared (drives its banner).
   double bossTime = 0;
@@ -286,8 +273,7 @@ class Game {
   /// The area covered by band [i] of the boss.
   Rect bossBandRect(Boss b, int i) {
     final px = bossPixel;
-    final (row, rows) = Boss.bandRows[i];
-    return bossTopLeft(b) + Offset(0, row * px) & Size(11 * px, rows * px);
+    return bossTopLeft(b) + Offset(0, i * px) & Size(11 * px, px);
   }
 
   /// True while a new boss is still dropping into view.
@@ -310,7 +296,6 @@ class Game {
     pulse = null;
     boss = null;
     _bossPending = false;
-    _bossesBeaten = 0;
     score = 0;
     spawned = 0;
     time = 0;
@@ -410,8 +395,12 @@ class Game {
 
   void _spawnBoss() {
     _bossPending = false;
-    final bands = List.of(Boss.iconBands);
-    if (_bossesBeaten > 0) bands.shuffle(_random);
+    // Random colours, but never the same twice in a row so every band shows.
+    final bands = <int>[];
+    while (bands.length < Boss.bandCount) {
+      final mask = GameColors.all[_random.nextInt(GameColors.all.length)];
+      if (bands.isEmpty || bands.last != mask) bands.add(mask);
+    }
     boss = Boss(
       bands: bands,
       speed: bossSpeedFor(wave),
@@ -431,8 +420,7 @@ class Game {
     if (b.alive == 0) {
       points += bossBonus;
       boss = null;
-      _bossesBeaten++;
-      for (var i = 0; i < Boss.bandRows.length; i++) {
+      for (var i = 0; i < Boss.bandCount; i++) {
         explosions.add(
           Explosion(bossBandRect(b, i).center, b.bands[i], points: 0),
         );

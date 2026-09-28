@@ -27,9 +27,12 @@ void _beatBoss(Game g) {
   }
 }
 
+/// Eight bands whose top and bottom colours differ.
+const _bands = [1, 3, 2, 6, 4, 5, 7, 2];
+
 Game _bossGame() {
   final g = _newGame();
-  g.boss = Boss(bands: List.of(Boss.iconBands), speed: 0, y: 0.1);
+  g.boss = Boss(bands: List.of(_bands), speed: 0, y: 0.1);
   return g;
 }
 
@@ -191,7 +194,12 @@ void main() {
     g.monsters.clear();
     g.update(0.05);
     expect(g.boss, isNotNull);
-    expect(g.boss!.bands, Boss.iconBands);
+    final bands = g.boss!.bands;
+    expect(bands, hasLength(Boss.bandCount));
+    expect(bands.every(GameColors.all.contains), isTrue);
+    for (var i = 1; i < bands.length; i++) {
+      expect(bands[i], isNot(bands[i - 1]));
+    }
     expect(bosses, 1);
     // No new monsters while the boss is out.
     for (var i = 0; i < 100; i++) {
@@ -203,7 +211,7 @@ void main() {
   test('a new boss drops in quickly and the launcher waits for it', () {
     final g = _newGame();
     g.boss = Boss(
-      bands: List.of(Boss.iconBands),
+      bands: List.of(_bands),
       speed: Game.bossStartSpeed,
       y: -8 * g.bossPixel / g.size.height,
     );
@@ -263,7 +271,7 @@ void main() {
     final waves = <int>[];
     g.onWave = waves.add;
     _beatBoss(g);
-    final bandPoints = Boss.iconBands.map(GameColors.buttonsFor);
+    final bandPoints = _bands.map(GameColors.buttonsFor);
     expect(g.score, bandPoints.reduce((a, b) => a + b) + Game.bossBonus);
     expect(g.wave, 2);
     expect(waves, [2]);
@@ -273,9 +281,9 @@ void main() {
   test('boss ends the game when its lowest solid band hits the bottom', () {
     final g = _bossGame();
     final b = g.boss!;
-    // With its two bottom bands gone the boss can sink further.
-    b.alive = 4;
-    // Band 3 (sprite row 4) ends 5 pixels below the top.
+    // With its three bottom bands gone the boss can sink further.
+    b.alive = 5;
+    // Band 4 (sprite row 4) ends 5 pixels below the top.
     b.y = (g.size.height - 5 * g.bossPixel) / g.size.height - 0.01;
     g.update(1 / 60);
     expect(g.phase, GamePhase.playing);

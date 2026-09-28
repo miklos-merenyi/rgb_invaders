@@ -374,15 +374,15 @@ class _GameScreenState extends State<GameScreen>
     GameColors.red,
     GameColors.green,
     GameColors.blue,
-    ...Boss.iconBands,
+    ...GameColors.rainbow,
   ];
 
-  /// [text] with each letter in the next of [colors] (by default the boss's
-  /// bands, i.e. the app icon's rainbow), glowing in its own colour.
+  /// [text] with each letter in the next of [colors] (by default the app
+  /// icon's rainbow), glowing in its own colour.
   Widget _rainbowText(
     String text,
     TextStyle style, {
-    List<int> colors = Boss.iconBands,
+    List<int> colors = GameColors.rainbow,
   }) {
     final letters = <TextSpan>[];
     var i = 0;
