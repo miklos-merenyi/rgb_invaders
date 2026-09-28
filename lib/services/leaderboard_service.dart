@@ -27,6 +27,9 @@ const kLeaderboardMinScore = 20;
 const _kHasSignedIn = 'leaderboard_has_signed_in';
 // Set when the player says "No thanks" to the prompt; cleared on sign-in.
 const _kOptedOut = 'leaderboard_opted_out';
+// The player's best score on this device, posted after any sign-in so bests
+// set while signed out still reach the leaderboard.
+const _kBest = 'best_score';
 
 class LeaderboardService extends ChangeNotifier {
   static final LeaderboardService _instance = LeaderboardService._();
@@ -37,11 +40,15 @@ class LeaderboardService extends ChangeNotifier {
   bool _hasSignedIn = false;
   bool _optedOut = false;
   bool _promptedThisSession = false;
+  int _best = 0;
 
   /// False until the leaderboard IDs for this platform are filled in.
   bool get enabled => _leaderboardId.isNotEmpty;
 
   bool get isSignedIn => _signedIn;
+
+  /// The best score saved on this device.
+  int get best => _best;
 
   /// True when the game just finished with [score] should offer sign-in:
   /// at most once per launch, and never after the player declined.
@@ -52,38 +59,67 @@ class LeaderboardService extends ChangeNotifier {
       !_promptedThisSession &&
       score >= kLeaderboardMinScore;
 
-  /// Call once from main(). Loads the saved flags and, for a returning
-  /// player, signs in silently in the background.
+  /// Call once from main(). Loads the saved best and flags, then signs in
+  /// in the background (see [_autoSignIn]).
   Future<void> init() async {
-    if (!enabled) return;
     final prefs = await SharedPreferences.getInstance();
+    _best = prefs.getInt(_kBest) ?? 0;
+    if (!enabled) return;
     _hasSignedIn = prefs.getBool(_kHasSignedIn) ?? false;
     _optedOut = prefs.getBool(_kOptedOut) ?? false;
-    if (_hasSignedIn && !_optedOut) _signIn();
+    _autoSignIn();
   }
 
-  Future<bool> _signIn() async {
+  /// Signs in without the player asking:
+  /// - Picks up an existing session first. Play Games signs most Android
+  ///   players in by itself at launch, and that shows no UI.
+  /// - iOS always authenticates with Game Center, as Apple recommends. For a
+  ///   signed-in player that's just the "Welcome back" banner, and Game
+  ///   Center stops asking players who keep cancelling.
+  /// - Android only calls signIn() for a player who signed in before, since
+  ///   otherwise it would show the account picker on every launch.
+  /// Once signed in, posts the saved best.
+  Future<void> _autoSignIn() async {
+    try {
+      if (await GamesServices.isSignedIn) {
+        await _markSignedIn();
+      } else if (Platform.isIOS || _hasSignedIn) {
+        await GamesServices.signIn();
+        await _markSignedIn();
+      }
+    } catch (e) {
+      debugPrint('[LeaderboardService] auto sign-in skipped: $e');
+    }
+    if (_signedIn) await submitBest();
+  }
+
+  Future<void> _markSignedIn() async {
+    _signedIn = true;
+    notifyListeners();
+    if (_hasSignedIn) return;
+    _hasSignedIn = true;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kHasSignedIn, true);
+  }
+
+  /// Shows the platform sign-in UI. On success, remembers it, turns
+  /// submission back on if the player had declined before, and posts the
+  /// saved best.
+  Future<bool> signIn() async {
+    if (!enabled) return false;
     try {
       await GamesServices.signIn();
-      _signedIn = true;
+      await _markSignedIn();
     } catch (e) {
       debugPrint('[LeaderboardService] sign-in failed: $e');
       _signedIn = false;
+      notifyListeners();
+      return false;
     }
-    notifyListeners();
-    return _signedIn;
-  }
-
-  /// Shows the platform sign-in UI. On success, remembers it and turns
-  /// submission back on if the player had declined before.
-  Future<bool> signIn() async {
-    if (!enabled) return false;
-    if (!await _signIn()) return false;
-    _hasSignedIn = true;
     _optedOut = false;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kHasSignedIn, true);
     await prefs.setBool(_kOptedOut, false);
+    await submitBest();
     return true;
   }
 
@@ -95,6 +131,20 @@ class LeaderboardService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kOptedOut, true);
   }
+
+  /// Saves [score] if it's a new best, then posts it if signed in.
+  Future<void> recordScore(int score) async {
+    if (score > _best) {
+      _best = score;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_kBest, score);
+    }
+    await submitScore(score);
+  }
+
+  /// Posts the saved best. The platform keeps only each player's best, so
+  /// posting one that's already there is harmless.
+  Future<void> submitBest() => submitScore(_best);
 
   /// Posts [score] if signed in and it's worth posting. The platform keeps
   /// only each player's best, so every game's score can be sent.
@@ -114,11 +164,13 @@ class LeaderboardService extends ChangeNotifier {
     }
   }
 
-  /// Opens the native leaderboard UI, signing in first if needed.
+  /// Opens the native leaderboard UI, signing in first if needed. Opening it
+  /// also turns submission back on for a player who declined the prompt but
+  /// was signed in by the platform anyway.
   /// Returns false if the player couldn't be signed in.
   Future<bool> show() async {
     if (!enabled) return false;
-    if (!_signedIn && !await signIn()) return false;
+    if ((!_signedIn || _optedOut) && !await signIn()) return false;
     try {
       await GamesServices.showLeaderboards(
         iOSLeaderboardID: _kIosLeaderboardId,

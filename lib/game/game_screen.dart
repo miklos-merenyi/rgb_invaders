@@ -57,6 +57,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void initState() {
     super.initState();
+    _game.best = max(_game.best, LeaderboardService().best);
     _ticker = createTicker(_tick)..start();
     if (_kDemo) {
       // Wall-clock time of the first frame, to line up the logged sounds
@@ -169,7 +170,7 @@ class _GameScreenState extends State<GameScreen>
     setState(() => _overlayReady = false);
     final score = _game.score;
     final lb = LeaderboardService();
-    lb.submitScore(score);
+    lb.recordScore(score);
     // Let the player see what hit the bottom before anything pops up.
     await Future<void>.delayed(const Duration(milliseconds: 1000));
     final ps = PurchaseService();
@@ -227,7 +228,8 @@ class _GameScreenState extends State<GameScreen>
     );
     // Dismissing the dialog just skips it for this launch.
     await lb.prompted(declined: signIn == false);
-    if (signIn == true && await lb.signIn()) await lb.submitScore(score);
+    // Signing in posts the saved best, which includes this score.
+    if (signIn == true) await lb.signIn();
   }
 
   Future<void> _openLeaderboard() async {

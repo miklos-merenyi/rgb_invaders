@@ -79,8 +79,15 @@ One global leaderboard, using Game Center on iOS and Play Games on Android:
   🏆 Leaderboard link on the start and game-over screens, or from a prompt
   offered once per launch after a score of 20 or more (`kLeaderboardMinScore`).
   "No thanks" stops the prompt until the player signs in via the link.
-- Once signed in, later launches sign in silently and every score of 20 or
-  more is submitted. The platform keeps each player's best.
+- At launch the game picks up an existing session without showing anything
+  (Play Games signs most Android players in by itself). iOS always
+  authenticates with Game Center, as Apple recommends. Android only calls
+  sign-in for players who signed in before, so nobody else sees the account
+  picker at launch.
+- Once signed in, every score of 20 or more is submitted. The platform keeps
+  each player's best.
+- The best score is saved on the device and posted after every sign-in, so
+  a best set while signed out still reaches the leaderboard.
 
 Before a release (the leaderboard is hidden until this is done):
 
