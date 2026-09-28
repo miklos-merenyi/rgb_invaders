@@ -395,12 +395,15 @@ class Game {
 
   void _spawnBoss() {
     _bossPending = false;
-    // Random colours, but never the same twice in a row so every band shows.
-    final bands = <int>[];
-    while (bands.length < Boss.bandCount) {
-      final mask = GameColors.all[_random.nextInt(GameColors.all.length)];
-      if (bands.isEmpty || bands.last != mask) bands.add(mask);
-    }
+    // Every colour once plus one random extra, shuffled until the extra
+    // doesn't sit next to its twin so every band shows.
+    final bands = [
+      ...GameColors.all,
+      GameColors.all[_random.nextInt(GameColors.all.length)],
+    ];
+    do {
+      bands.shuffle(_random);
+    } while (_hasNeighbourTwins(bands));
     boss = Boss(
       bands: bands,
       speed: bossSpeedFor(wave),
@@ -408,6 +411,13 @@ class Game {
     );
     bossTime = 0;
     onBoss?.call();
+  }
+
+  static bool _hasNeighbourTwins(List<int> bands) {
+    for (var i = 1; i < bands.length; i++) {
+      if (bands[i] == bands[i - 1]) return true;
+    }
+    return false;
   }
 
   /// Shoots away the boss's lowest band; the last one ends the boss and

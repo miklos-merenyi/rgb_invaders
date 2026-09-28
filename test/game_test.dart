@@ -197,6 +197,7 @@ void main() {
     final bands = g.boss!.bands;
     expect(bands, hasLength(Boss.bandCount));
     expect(bands.every(GameColors.all.contains), isTrue);
+    expect(bands.toSet(), GameColors.all.toSet());
     for (var i = 1; i < bands.length; i++) {
       expect(bands[i], isNot(bands[i - 1]));
     }
