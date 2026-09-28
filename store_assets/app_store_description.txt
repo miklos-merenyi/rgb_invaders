@@ -1,0 +1,62 @@
+RGB Invaders — App Store listing
+================================
+
+SUBTITLE (max 30 chars)
+-----------------------
+Mix colours. Blast invaders.
+
+
+PROMOTIONAL TEXT (max 170 chars)
+--------------------------------
+New: boss fights! After every wave a giant eight-band invader descends. Peel it apart band by band in exactly the right colour before it lands.
+
+
+KEYWORDS (max 100 chars, comma-separated)
+-----------------------------------------
+arcade,retro,colour,color,rgb,mix,reflex,shooter,invaders,boss,pixel,casual,brain,quick,tap
+
+
+DESCRIPTION (max 4000 chars)
+----------------------------
+Red, green and blue. That's all you need — and all you get.
+
+RGB Invaders is a fast, colourful arcade game about mixing light. Pixel invaders in seven colours rain down from the top of the screen. Fire an expanding ring of colour to destroy them — but a ring only hits an invader of its own colour. Everything else it passes straight through.
+
+MIX YOUR SHOTS
+Tap Red, Green or Blue to fire that colour. Press buttons together to mix:
+• Red + Green = Yellow
+• Green + Blue = Cyan
+• Red + Blue = Magenta
+• Red + Green + Blue = White
+
+Only one ring can be on screen at a time, so every shot counts. Pick the wrong colour and you waste precious seconds while the invaders keep coming.
+
+BOSS FIGHTS
+Clear a wave and a huge boss invader descends, striped with eight coloured bands — every colour, plus one extra, in a random order.
+• Only the colour of its lowest band can hurt it. Hit it and that band is blasted away, exposing the next one up.
+• Fire the wrong colour and the boss lurches down a row, closer to the ground.
+• Strip away all eight bands for a bonus and the next wave begins.
+• Every boss comes down a little faster than the last.
+Read the stripes, chain the right chords, and keep your nerve.
+
+WAVES THAT BUILD
+Each wave of 25 invaders speeds up as it goes. The next wave starts calm again — but the invaders arrive in pairs, then threes, fours and fives. Survive long enough and every wave starts faster than the one before.
+
+SCORE BIG
+Primary colours are worth 1 point, mixed colours 2, and white 3. Beating a boss adds a bonus on top. If a single invader — or the boss — reaches the bottom, it's game over.
+
+COMPETE
+Sign in to Game Center to post your best score to the global leaderboard and see how you stack up. Signing in is optional, and nothing is submitted until you do.
+
+MADE TO PICK UP AND PLAY
+• Just three glossy, multi-touch colour buttons
+• A colour-mix legend on screen while you learn
+• Crisp retro pixel art and punchy sound effects
+• Mute button that remembers your setting
+• Works offline
+• Short rounds, perfect for a quick break — and dangerously hard to put down
+
+FAIR AND FRIENDLY
+RGB Invaders is free to play with occasional ads, limited to family-friendly content. Enjoying the game? Leave a tip from the tip jar to support development and play ad-free for a month, three months or a whole year. Tips stack, and there are no subscriptions.
+
+How long can you hold the line?
