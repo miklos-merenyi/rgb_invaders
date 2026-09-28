@@ -21,8 +21,8 @@ const _kDemo = bool.fromEnvironment('DEMO');
 
 /// How long the demo plays (counted from its first game, across restarts)
 /// before it stops firing, loses, and stays on the game-over screen. Sized so
-/// a 3-minute recording ends on game over.
-const _kDemoSeconds = 165.0;
+/// a 2-minute recording ends on game over.
+const _kDemoSeconds = 105.0;
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, this.game});

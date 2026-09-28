@@ -60,10 +60,10 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build ios --config-only --debug
 `store_assets/video/` holds a 1080×1920 and a 1920×1080 video (the latter is
 the game on `landscape_bg.png`). Build and install the DEMO app as above, on
 the **iPhone 17 Pro Max** simulator (1320×2868). The demo gives up after
-`_kDemoSeconds` (165 s) so a 3-minute recording ends on game over.
+`_kDemoSeconds` (105 s) so a 2-minute recording ends on game over.
 
 ```sh
-xcrun simctl io $SIM recordVideo --codec=h264 --force raw.mp4 &   # Ctrl-C / kill -INT after ~200 s
+xcrun simctl io $SIM recordVideo --codec=h264 --force raw.mp4 &   # Ctrl-C / kill -INT after ~140 s
 xcrun simctl launch $SIM com.mermik.rgbinvaders
 # afterwards: the demo's sound log (--console doesn't show Flutter prints)
 xcrun simctl spawn $SIM log show --last 10m --style compact \
@@ -80,7 +80,7 @@ Simulator recordings are silent and have out-of-order timestamps, so:
    `TAP + (µs − first start.wav µs)/1e6 − START` seconds, where
    START = TAP − 2.6 s (a short look at the title screen). Normalise if it
    clips.
-4. Cut 180 s from START. Portrait: scale to 884×1920, pad to 1080×1920 on
+4. Cut 120 s from START. Portrait: scale to 884×1920, pad to 1080×1920 on
    black. Landscape: scale to 498×1080 and overlay at x=711 on
    `landscape_bg.png`. H.264 CRF 20, 60 fps, AAC 96k.
 
