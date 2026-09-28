@@ -29,12 +29,15 @@ final kAllProductIds = {kProductTipS, kProductTipM, kProductTipL};
 final kAdFreeMonths = {kProductTipS: 1, kProductTipM: 3, kProductTipL: 12};
 
 /// Show the tip jar every N games (in place of that game's ad), as long as
-/// ads aren't currently suppressed.
+/// ads aren't currently suppressed. It counts as an ad break for
+/// [kAdMinGames] and [kAdMinGap].
 const kTipPromptEvery = 20;
 
 // ── SharedPreferences keys ────────────────────────────────────────────────────
 const _kAdsFreeUntilMs = 'ads_free_until_ms';
 const _kGamesPlayed = 'games_played';
+const _kGamesSinceAd = 'games_since_ad';
+const _kLastAdMs = 'last_ad_ms';
 
 class PurchaseService extends ChangeNotifier {
   static final PurchaseService _instance = PurchaseService._();
@@ -48,6 +51,13 @@ class PurchaseService extends ChangeNotifier {
   bool _available = false;
   DateTime? _adsFreeUntil;
   int _gamesPlayed = 0;
+  int _gamesSinceAd = 0;
+  // Starts at first launch, so a new player also waits [kAdMinGap].
+  late DateTime _lastAdAt = clock();
+
+  /// The time source, replaceable in tests.
+  @visibleForTesting
+  DateTime Function() clock = DateTime.now;
 
   Map<String, ProductDetails> _products = {};
   bool _loadingPurchase = false;
@@ -71,14 +81,21 @@ class PurchaseService extends ChangeNotifier {
   bool get shouldShowAd =>
       !adsRemoved &&
       !shouldShowTipPrompt &&
-      _gamesPlayed > 0 &&
-      _gamesPlayed % kAdEveryNGames == 0;
+      _gamesSinceAd >= kAdMinGames &&
+      clock().difference(_lastAdAt) >= kAdMinGap;
 
   ProductDetails? product(String id) => _products[id];
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _gamesPlayed = prefs.getInt(_kGamesPlayed) ?? 0;
+    _gamesSinceAd = prefs.getInt(_kGamesSinceAd) ?? 0;
+    final lastAdMs = prefs.getInt(_kLastAdMs);
+    if (lastAdMs != null) {
+      _lastAdAt = DateTime.fromMillisecondsSinceEpoch(lastAdMs);
+    } else {
+      await prefs.setInt(_kLastAdMs, _lastAdAt.millisecondsSinceEpoch);
+    }
     final storedMs = prefs.getInt(_kAdsFreeUntilMs);
     if (storedMs != null) {
       _adsFreeUntil = DateTime.fromMillisecondsSinceEpoch(storedMs);
@@ -113,9 +130,21 @@ class PurchaseService extends ChangeNotifier {
 
   Future<void> incrementGames() async {
     _gamesPlayed++;
+    _gamesSinceAd++;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kGamesPlayed, _gamesPlayed);
+    await prefs.setInt(_kGamesSinceAd, _gamesSinceAd);
     notifyListeners();
+  }
+
+  /// Restarts the count towards the next ad. Call after an ad was actually
+  /// shown, or the tip jar was shown in its place.
+  Future<void> adBreakShown() async {
+    _gamesSinceAd = 0;
+    _lastAdAt = clock();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kGamesSinceAd, 0);
+    await prefs.setInt(_kLastAdMs, _lastAdAt.millisecondsSinceEpoch);
   }
 
   Future<void> buyTip(String productId) async {

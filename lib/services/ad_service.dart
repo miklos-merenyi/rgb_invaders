@@ -30,8 +30,12 @@ String get _interstitialAdUnitId {
       : _kReleaseAndroidInterstitialId;
 }
 
-/// Show an interstitial ad every N games (unless a tip removed ads).
-const kAdEveryNGames = 3;
+/// An interstitial ad is shown after a game only once both at least this
+/// many games and [kAdMinGap] have passed since the last ad (unless a tip
+/// removed ads). Counting time as well keeps quick early losses from
+/// bringing up an ad every minute.
+const kAdMinGames = 2;
+const kAdMinGap = Duration(seconds: 150);
 
 class AdService {
   static final AdService _instance = AdService._();
