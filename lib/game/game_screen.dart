@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../services/ad_service.dart';
 import '../services/leaderboard_service.dart';
@@ -13,6 +14,7 @@ import 'chord_detector.dart';
 import 'color_pad.dart';
 import 'game.dart';
 import 'game_painter.dart';
+import 'share_card.dart';
 
 /// Build with `--dart-define=DEMO=true` to make the game start and play
 /// itself for a while, e.g. for store screenshots on a simulator. Off in
@@ -368,6 +370,7 @@ class _GameScreenState extends State<GameScreen>
                 ),
               ),
               const SizedBox(height: 40),
+              if (over) _buildShareLink(),
               if (LeaderboardService().enabled) _buildLeaderboardLink(),
               _buildSupportLink(),
             ],
@@ -429,23 +432,70 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  static const _linkStyle = TextStyle(
+    fontSize: 13,
+    color: Colors.white54,
+    decoration: TextDecoration.underline,
+    decorationColor: Colors.white24,
+    letterSpacing: 1,
+  );
+
   Widget _buildLeaderboardLink() {
     return GestureDetector(
       onTap: _openLeaderboard,
       child: const Padding(
         padding: EdgeInsets.all(8),
-        child: Text(
-          '🏆 Leaderboard',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.white54,
-            decoration: TextDecoration.underline,
-            decorationColor: Colors.white24,
-            letterSpacing: 1,
-          ),
+        child: Text('🏆 Leaderboard', style: _linkStyle),
+      ),
+    );
+  }
+
+  Widget _buildShareLink() {
+    // A Builder, so the share sheet on iPad can point at this link.
+    return Builder(
+      builder: (context) => GestureDetector(
+        onTap: () => _shareScore(context),
+        child: const Padding(
+          padding: EdgeInsets.all(8),
+          child: Text('📤 Share score', style: _linkStyle),
         ),
       ),
     );
+  }
+
+  bool _sharing = false;
+
+  /// Shares a card with the score and a QR code to the game, plus a message
+  /// with the same link.
+  Future<void> _shareScore(BuildContext linkContext) async {
+    if (_sharing) return;
+    _sharing = true;
+    final box = linkContext.findRenderObject() as RenderBox?;
+    final origin = box == null
+        ? null
+        : box.localToGlobal(Offset.zero) & box.size;
+    final score = _game.score;
+    final wave = _game.wave;
+    try {
+      final png = await renderShareCard(score: score, wave: wave);
+      await SharePlus.instance.share(
+        ShareParams(
+          text: shareMessage(score: score, wave: wave),
+          files: [
+            XFile.fromData(
+              png,
+              mimeType: 'image/png',
+              name: 'rgb_invaders_score.png',
+            ),
+          ],
+          sharePositionOrigin: origin,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[GameScreen] share failed: $e');
+    } finally {
+      _sharing = false;
+    }
   }
 
   Widget _buildSupportLink() {

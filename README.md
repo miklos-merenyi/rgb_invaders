@@ -132,6 +132,7 @@ flutter test           # game-logic tests
 - `lib/game/game_painter.dart`: draws the game on a canvas
 - `lib/game/chord_detector.dart`: groups near-simultaneous presses into one colour (same approach as rigobert)
 - `lib/game/color_pad.dart`: the glossy colour buttons and the colour-mix legend
+- `lib/game/share_card.dart`: the "Share score" image, with the score and a QR code to `get.html`
 - `lib/game/game_screen.dart`: game loop (Ticker), multi-touch buttons, overlays
 - `lib/services/`: ads (`ad_service.dart`), tips / ad-free time (`purchase_service.dart`), sound effects (`sound_service.dart`) and the leaderboard (`leaderboard_service.dart`)
 - `lib/widgets/tip_jar.dart`: the tip jar dialog

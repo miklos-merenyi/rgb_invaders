@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'game.dart';
 
 /// Two animation frames of the invader sprite, 11x8 pixels.
-const _spriteFrames = [
+const invaderFrames = [
   [
     '..X.....X..',
     '...X...X...',
@@ -165,7 +165,7 @@ class GamePainter extends CustomPainter {
     final center = game.monsterPosition(m);
     final r = game.monsterRadius;
     final color = GameColors.of(m.mask);
-    final frame = _spriteFrames[(m.age * 3).floor() % 2];
+    final frame = invaderFrames[(m.age * 3).floor() % 2];
     final px = 2 * r / 11;
     final top = center.dy - px * 4;
     final left = center.dx - px * 5.5;
@@ -197,7 +197,7 @@ class GamePainter extends CustomPainter {
   void _paintBoss(Canvas canvas, Boss b) {
     final px = game.bossPixel;
     final topLeft = game.bossTopLeft(b);
-    final frame = _spriteFrames[(b.age * 1.5).floor() % 2];
+    final frame = invaderFrames[(b.age * 1.5).floor() % 2];
     final targetGlow = 0.35 + 0.25 * sin(clock() * 8);
 
     for (var i = 0; i < b.alive; i++) {
