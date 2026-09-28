@@ -35,7 +35,7 @@ String get _interstitialAdUnitId {
 /// removed ads). Counting time as well keeps quick early losses from
 /// bringing up an ad every minute.
 const kAdMinGames = 2;
-const kAdMinGap = Duration(seconds: 150);
+const kAdMinGap = Duration(seconds: 180);
 
 class AdService {
   static final AdService _instance = AdService._();

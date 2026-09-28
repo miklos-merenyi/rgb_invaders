@@ -29,11 +29,11 @@ void main() {
     return true;
   }
 
-  test('quick games wait for 150 seconds since the last ad', () async {
+  test('quick games wait for 180 seconds since the last ad', () async {
     await startAfterTipJar();
     final ads = [for (var i = 0; i < 12; i++) await play(20)];
-    // 20-second games: the 8th game is the first past 150 seconds.
-    expect(ads, List.generate(12, (i) => i == 7));
+    // 20-second games: the 9th game is the first to reach 180 seconds.
+    expect(ads, List.generate(12, (i) => i == 8));
   });
 
   test('long games still wait for two games', () async {
