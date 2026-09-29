@@ -3,8 +3,9 @@
 
 Run from the repo root:  python3 tool/make_sounds.py   (needs numpy)
 
-Fire sounds use the same note per colour combination as rigobert
-(F minor pentatonic): R=F4, G=G4, B=Bb4, RG=C5, RB=D5, GB=F5, RGB=G5.
+Pitched sounds are in Ab minor, the key of the music. Fire sounds use
+Ab minor pentatonic, one note per colour combination:
+R=Gb4, G=Ab4, B=B4, RG=Db5, RB=Eb5, GB=Gb5, RGB=Ab5.
 """
 
 import os
@@ -17,13 +18,13 @@ OUT = os.path.join(os.path.dirname(__file__), "..", "assets", "sounds")
 
 # Colour mask (R=1, G=2, B=4) -> note frequency.
 FIRE_NOTES = {
-    1: 349.23,  # red      F4
-    2: 392.00,  # green    G4
-    4: 466.16,  # blue     Bb4
-    3: 523.25,  # yellow   C5
-    5: 587.33,  # magenta  D5
-    6: 698.46,  # cyan     F5
-    7: 783.99,  # white    G5
+    1: 369.99,  # red      Gb4
+    2: 415.30,  # green    Ab4
+    4: 493.88,  # blue     B4
+    3: 554.37,  # yellow   Db5
+    5: 622.25,  # magenta  Eb5
+    6: 739.99,  # cyan     Gb5
+    7: 830.61,  # white    Ab5
 }
 
 
@@ -126,16 +127,16 @@ def triangle(ph):
 
 
 def game_over():
-    """Descending F minor arpeggio, ending on a long low note."""
-    x = notes([(523.25, 0.16), (415.30, 0.16), (349.23, 0.16),
-               (261.63, 0.7)], square_soft, decay=0.25)
+    """Descending Ab minor arpeggio, ending on a long low note."""
+    x = notes([(622.25, 0.16), (493.88, 0.16), (415.30, 0.16),
+               (311.13, 0.7)], square_soft, decay=0.25)
     return x * envelope(len(x), release=0.08)
 
 
 def start():
-    """Quick rising F minor arpeggio."""
-    return notes([(349.23, 0.07), (415.30, 0.07), (523.25, 0.07),
-                  (698.46, 0.22)], triangle, decay=0.12)
+    """Quick rising Ab minor arpeggio."""
+    return notes([(415.30, 0.07), (493.88, 0.07), (622.25, 0.07),
+                  (830.61, 0.22)], triangle, decay=0.12)
 
 
 def main():
