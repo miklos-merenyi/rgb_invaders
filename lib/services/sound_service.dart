@@ -194,6 +194,12 @@ class SoundService extends ChangeNotifier {
     _newGameTimer?.cancel();
     _newGameTimer = null;
     _music = music;
+    if (_kDemo) {
+      debugPrint(
+        'DEMO_MUSIC ${DateTime.now().microsecondsSinceEpoch} ${music.name} '
+        '$_bossTrack',
+      );
+    }
     _applyMusic();
   }
 

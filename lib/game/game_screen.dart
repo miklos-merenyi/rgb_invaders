@@ -12,6 +12,7 @@ import '../services/sound_service.dart';
 import '../widgets/tip_jar.dart';
 import 'chord_detector.dart';
 import 'color_pad.dart';
+import 'demo_player.dart';
 import 'game.dart';
 import 'game_painter.dart';
 import 'share_card.dart';
@@ -23,8 +24,13 @@ const _kDemo = bool.fromEnvironment('DEMO');
 
 /// How long the demo plays (counted from its first game, across restarts)
 /// before it stops firing, loses, and stays on the game-over screen. Sized so
-/// a 2-minute recording ends on game over.
-const _kDemoSeconds = 105.0;
+/// a 2-minute recording ends on game over; `--dart-define=DEMO_SECONDS=n`
+/// changes it.
+const _kDemoSeconds = int.fromEnvironment('DEMO_SECONDS', defaultValue: 105);
+
+/// Wave the demo starts at (`--dart-define=DEMO_WAVE=3`); later waves send
+/// more invaders at once, giving the demo player room to build turbo streaks.
+const _kDemoWave = int.fromEnvironment('DEMO_WAVE', defaultValue: 1);
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, this.game});
@@ -48,8 +54,14 @@ class _GameScreenState extends State<GameScreen>
       _sounds.start();
       _sounds.bossMusic(_game.wave);
     })
-    ..onTurbo = _sounds.start
-    ..onClear = ((masks) => masks.forEach(_sounds.explosion));
+    ..onTurbo = (() {
+      _demoLog('TURBO');
+      _sounds.start();
+    })
+    ..onClear = ((masks) {
+      _demoLog('CLEAR');
+      masks.forEach(_sounds.explosion);
+    });
   final _sounds = SoundService();
   late final Ticker _ticker;
   final _frame = ValueNotifier<int>(0);
@@ -83,6 +95,13 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
+  /// Logs a game event with a wall-clock timestamp in demo builds, to find
+  /// it in a screen recording (see COMMANDS.md).
+  void _demoLog(String event) {
+    if (!_kDemo) return;
+    debugPrint('DEMO_EVENT ${DateTime.now().microsecondsSinceEpoch} $event');
+  }
+
   /// True while the demo player is holding buttons down.
   bool _demoPressing = false;
 
@@ -96,34 +115,25 @@ class _GameScreenState extends State<GameScreen>
   double? _demoWaitUntil;
   final _demoRandom = Random();
 
-  /// Demo player: presses the buttons for the invader closest to the bottom
-  /// (or the boss's lowest band) once it's a little way down the screen. It
+  /// Demo player: presses the buttons for the colour [demoTarget] picks. It
   /// goes through the chord detector like real fingers, so the pads light up
   /// as in normal play.
   void _demoTurn() {
     if (_demoPressing || !_game.canFire || _demoGivingUp) return;
-    final boss = _game.boss;
-    final int target;
-    if (boss != null) {
-      final bottom = _game.bossBandRect(boss, boss.alive - 1).bottom;
-      if (bottom < _game.size.height * 0.2) return;
-      target = boss.target;
-    } else {
-      final lowest = _game.monsters
-          .where((m) => m.y > 0.2)
-          .fold<Monster?>(null, (a, m) => a == null || m.y > a.y ? m : a);
-      if (lowest == null) return;
-      target = lowest.mask;
+    final target = demoTarget(_game);
+    if (target == null) {
+      _demoWaitUntil = null;
+      return;
     }
     // Vary the reaction time like a person: usually quick, sometimes slow.
     final waitUntil = _demoWaitUntil ??=
-        _game.time + 0.05 + pow(_demoRandom.nextDouble(), 2) * 1.2;
+        _game.time + 0.05 + pow(_demoRandom.nextDouble(), 2) * 0.6;
     if (_game.time < waitUntil) return;
     _demoWaitUntil = null;
     _demoPressing = true;
     // Now and then pick the wrong colour, as people do.
     var mask = target;
-    if (_demoRandom.nextDouble() < 0.12) {
+    if (_demoRandom.nextDouble() < 0.04) {
       final others = GameColors.all.where((m) => m != mask).toList();
       mask = others[_demoRandom.nextInt(others.length)];
     }
@@ -276,6 +286,7 @@ class _GameScreenState extends State<GameScreen>
     if (!_overlayReady) return;
     _chords.reset();
     _game.start();
+    if (_kDemo) _game.wave = _kDemoWave;
     _sounds.start();
     _sounds.newGameMusic();
     setState(() => _shownPhase = _game.phase);
