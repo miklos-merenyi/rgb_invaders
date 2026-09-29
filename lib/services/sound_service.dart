@@ -30,8 +30,9 @@ const _kBossMusic = [
   'assets/sounds/boss_fight_3.ogg',
 ];
 
-/// Music volume, below the effects so shots and hits stay clear.
-const _kMusicVolume = 0.5;
+/// Playback volumes, music below the effects so shots and hits stay clear.
+const _kEffectsVolume = 0.8;
+const _kMusicVolume = 0.6;
 
 /// Cross-fade between tracks, and fade-out when the music stops.
 const _kMusicFade = Duration(milliseconds: 600);
@@ -207,7 +208,8 @@ class SoundService extends ChangeNotifier {
     }
   }
 
-  void _play(String asset, {double volume = 1}) {
+  void _play(String asset) {
+    const volume = _kEffectsVolume;
     if (!_enabled) return;
     final source = _sources[asset];
     if (source == null) return;
