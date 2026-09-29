@@ -40,8 +40,14 @@ class _GameScreenState extends State<GameScreen>
   late final Game _game = (widget.game ?? Game())
     ..onHit = ((_) => _sounds.explosion())
     ..onMiss = _sounds.miss
-    ..onWave = ((_) => _sounds.start())
-    ..onBoss = _sounds.start;
+    ..onWave = ((_) {
+      _sounds.start();
+      _sounds.waveMusic();
+    })
+    ..onBoss = (() {
+      _sounds.start();
+      _sounds.bossMusic(_game.wave);
+    });
   final _sounds = SoundService();
   late final Ticker _ticker;
   final _frame = ValueNotifier<int>(0);
@@ -150,6 +156,7 @@ class _GameScreenState extends State<GameScreen>
     if (_game.phase != _shownPhase) {
       setState(() => _shownPhase = _game.phase);
       if (_shownPhase == GamePhase.over) {
+        _sounds.stopMusic();
         _sounds.gameOver();
         _afterGameOver();
       }
@@ -268,6 +275,7 @@ class _GameScreenState extends State<GameScreen>
     _chords.reset();
     _game.start();
     _sounds.start();
+    _sounds.newGameMusic();
     setState(() => _shownPhase = _game.phase);
   }
 
@@ -301,7 +309,7 @@ class _GameScreenState extends State<GameScreen>
                   if (_shownPhase == GamePhase.ready ||
                       _shownPhase == GamePhase.over && _overlayReady)
                     _buildOverlay(),
-                  Positioned(top: 4, right: 4, child: _buildMuteButton()),
+                  Positioned(top: 4, right: 4, child: _buildSoundButtons()),
                 ],
               ),
             ),
@@ -417,16 +425,30 @@ class _GameScreenState extends State<GameScreen>
     return Text.rich(TextSpan(children: letters));
   }
 
-  Widget _buildMuteButton() {
+  /// Music and sound-effect switches, side by side.
+  Widget _buildSoundButtons() {
     return ListenableBuilder(
       listenable: _sounds,
-      builder: (context, _) => IconButton(
-        onPressed: _sounds.toggle,
-        tooltip: _sounds.enabled ? 'Mute' : 'Unmute',
-        icon: Icon(
-          _sounds.enabled ? Icons.volume_up : Icons.volume_off,
-          color: Colors.white38,
-        ),
+      builder: (context, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: _sounds.toggleMusic,
+            tooltip: _sounds.musicEnabled ? 'Music off' : 'Music on',
+            icon: Icon(
+              _sounds.musicEnabled ? Icons.music_note : Icons.music_off,
+              color: Colors.white38,
+            ),
+          ),
+          IconButton(
+            onPressed: _sounds.toggle,
+            tooltip: _sounds.enabled ? 'Mute' : 'Unmute',
+            icon: Icon(
+              _sounds.enabled ? Icons.volume_up : Icons.volume_off,
+              color: Colors.white38,
+            ),
+          ),
+        ],
       ),
     );
   }

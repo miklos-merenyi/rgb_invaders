@@ -1,4 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,16 +21,38 @@ const _kDud = 'assets/sounds/dud.wav';
 const _kGameOver = 'assets/sounds/game_over.wav';
 const _kStart = 'assets/sounds/start.wav';
 
+/// Music loops through each wave; the boss after wave n plays boss track
+/// (n - 1) % 3. OGG because it loops without MP3's gap at the seam.
+const _kWaveMusic = 'assets/sounds/rumination_blues.ogg';
+const _kBossMusic = [
+  'assets/sounds/boss_fight_1.ogg',
+  'assets/sounds/boss_fight_2.ogg',
+  'assets/sounds/boss_fight_3.ogg',
+];
+
+/// Music volume, below the effects so shots and hits stay clear.
+const _kMusicVolume = 0.5;
+
+/// Cross-fade between tracks, and fade-out when the music stops.
+const _kMusicFade = Duration(milliseconds: 600);
+
 const _kSoundOn = 'sound_on';
+const _kMusicOn = 'music_on';
+
+/// What the music should be playing.
+enum Music { none, wave, boss }
 
 /// Demo builds (see `_kDemo` in game_screen.dart) log every sound with a
 /// wall-clock timestamp, so a soundtrack can be rebuilt for screen
 /// recordings, which the simulator records without audio.
 const _kDemo = bool.fromEnvironment('DEMO');
 
-/// Sound effects through SoLoud, same engine as rigobert: every clip is
-/// decoded to PCM once up front and mixed natively, so playing is instant
-/// and never blocks the platform thread.
+/// Sound effects and music through SoLoud, same engine as rigobert: every
+/// effect is decoded to PCM once up front and mixed natively, so playing is
+/// instant and never blocks the platform thread. Music tracks are streamed
+/// from disk instead (decoded they'd take tens of MB); each gets one voice
+/// at start-up, paused, which is faded in and out as the game moves between
+/// waves and bosses. The wave track resumes where it left off after a boss.
 ///
 /// Until [init] has run (e.g. in widget tests) every play call is a no-op.
 class SoundService extends ChangeNotifier {
@@ -40,13 +64,42 @@ class SoundService extends ChangeNotifier {
 
   final Map<String, AudioSource> _sources = {};
   bool _enabled = true;
+  bool _musicEnabled = true;
 
-  /// Whether sound is switched on (the mute button); persisted.
+  /// Whether sound effects are switched on (the mute button); persisted.
   bool get enabled => _enabled;
+
+  /// Whether music is switched on (the music button); persisted.
+  bool get musicEnabled => _musicEnabled;
+
+  Music _music = Music.none;
+  int _bossTrack = 0;
+
+  /// False while the app is in the background, where the music pauses.
+  bool _foreground = true;
+  AppLifecycleListener? _lifecycle;
+
+  SoundHandle? _waveVoice;
+  final List<SoundHandle> _bossVoices = [];
+
+  /// Pending pauses at the end of a fade-out, cancelled if the voice is
+  /// wanted again before then.
+  final Map<SoundHandle, Timer> _pauseTimers = {};
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_kSoundOn) ?? true;
+    _musicEnabled = prefs.getBool(_kMusicOn) ?? true;
+    _lifecycle ??= AppLifecycleListener(
+      onStateChange: (state) {
+        // Not on `inactive` (e.g. Control Center pulled down): the game
+        // keeps running then.
+        _foreground =
+            state == AppLifecycleState.resumed ||
+            state == AppLifecycleState.inactive;
+        _applyMusic(fade: false);
+      },
+    );
     try {
       if (!_engine.isInitialized) {
         await _engine.init();
@@ -62,10 +115,23 @@ class SoundService extends ChangeNotifier {
       ]) {
         _sources[asset] = await _engine.loadAsset(asset);
       }
+      _waveVoice = await _loadMusic(_kWaveMusic);
+      for (final asset in _kBossMusic) {
+        _bossVoices.add(await _loadMusic(asset));
+      }
     } catch (e) {
       debugPrint('[SoundService] init failed, playing silently: $e');
     }
     notifyListeners();
+  }
+
+  /// Streams [asset] and returns a paused, looping voice for it, protected
+  /// so a burst of effects can't steal it.
+  Future<SoundHandle> _loadMusic(String asset) async {
+    final source = await _engine.loadAsset(asset, mode: LoadMode.disk);
+    final voice = _engine.play(source, volume: 0, paused: true, looping: true);
+    _engine.setProtectVoice(voice, true);
+    return voice;
   }
 
   Future<void> toggle() async {
@@ -73,6 +139,72 @@ class SoundService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kSoundOn, _enabled);
+  }
+
+  Future<void> toggleMusic() async {
+    _musicEnabled = !_musicEnabled;
+    _applyMusic(fade: false);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kMusicOn, _musicEnabled);
+  }
+
+  /// Starts the wave track from the top, for a new game.
+  void newGameMusic() {
+    final voice = _waveVoice;
+    if (voice != null) _engine.seek(voice, Duration.zero);
+    _setMusic(Music.wave);
+  }
+
+  /// Back to the wave track, where it was paused for the boss.
+  void waveMusic() => _setMusic(Music.wave);
+
+  /// Starts the boss track for the boss after [wave] from the top.
+  void bossMusic(int wave) {
+    _bossTrack = (wave - 1) % _kBossMusic.length;
+    if (_bossTrack < _bossVoices.length) {
+      _engine.seek(_bossVoices[_bossTrack], Duration.zero);
+    }
+    _setMusic(Music.boss);
+  }
+
+  void stopMusic() => _setMusic(Music.none);
+
+  void _setMusic(Music music) {
+    _music = music;
+    _applyMusic();
+  }
+
+  /// Fades in the voice that should be playing and fades out the rest.
+  void _applyMusic({bool fade = true}) {
+    final on = _musicEnabled && _foreground;
+    _fadeVoice(_waveVoice, on && _music == Music.wave, fade);
+    for (final (i, voice) in _bossVoices.indexed) {
+      _fadeVoice(voice, on && _music == Music.boss && i == _bossTrack, fade);
+    }
+  }
+
+  void _fadeVoice(SoundHandle? voice, bool on, bool fade) {
+    if (voice == null) return;
+    _pauseTimers.remove(voice)?.cancel();
+    final paused = _engine.getPause(voice);
+    if (on) {
+      if (paused) {
+        _engine.setVolume(voice, 0);
+        _engine.setPause(voice, false);
+      }
+      _engine.fadeVolume(voice, _kMusicVolume, _kMusicFade);
+    } else if (!paused) {
+      if (!fade) {
+        _engine.setPause(voice, true);
+        return;
+      }
+      _engine.fadeVolume(voice, 0, _kMusicFade);
+      _pauseTimers[voice] = Timer(_kMusicFade, () {
+        _pauseTimers.remove(voice);
+        _engine.setPause(voice, true);
+      });
+    }
   }
 
   void _play(String asset, {double volume = 1}) {
