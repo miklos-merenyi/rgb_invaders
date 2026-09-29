@@ -8,12 +8,12 @@ Mix colours. Blast invaders.
 
 PROMOTIONAL TEXT (max 170 chars)
 --------------------------------
-New: boss fights! After every wave a giant eight-band invader descends. Peel it apart band by band in exactly the right colour before it lands.
+New: TURBO mode! Destroy 5 invaders of one colour in a row to go turbo, then chain 5 more to blow the whole screen away for a 25-point bonus.
 
 
 KEYWORDS (max 100 chars, comma-separated)
 -----------------------------------------
-arcade,retro,colour,color,rgb,mix,reflex,shooter,invaders,boss,pixel,casual,brain,quick,tap
+arcade,retro,colour,color,rgb,mix,reflex,shooter,invaders,boss,pixel,casual,combo,streak,turbo
 
 
 DESCRIPTION (max 4000 chars)
@@ -39,11 +39,19 @@ Clear a wave and a huge boss invader descends, striped with eight coloured bands
 • Every boss comes down a little faster than the last.
 Read the stripes, chain the right chords, and keep your nerve.
 
+TURBO MODE
+Destroy five invaders of the same colour in a row and TURBO lights up.
+• A streak counter under your score shows how close you are.
+• Hit another colour and a new streak begins. A ring that hits nothing breaks it.
+• In turbo, chain five more in a row, in any one colour, and the whole screen explodes: every invader is destroyed and scored, plus a 25-point bonus.
+• Finish that streak on a boss's lowest band and the entire boss goes down with it.
+Hold your fire, pick your targets, and let the chain build.
+
 WAVES THAT BUILD
 Each wave of 25 invaders speeds up as it goes. The next wave starts calm again — but the invaders arrive in pairs, then threes, fours and fives. Survive long enough and every wave starts faster than the one before.
 
 SCORE BIG
-Primary colours are worth 1 point, mixed colours 2, and white 3. Beating a boss adds a bonus on top. If a single invader — or the boss — reaches the bottom, it's game over.
+Primary colours are worth 1 point, mixed colours 2, and white 3. Beating a boss or clearing the screen in turbo adds a bonus on top. If a single invader — or the boss — reaches the bottom, it's game over.
 
 COMPETE
 Sign in to Game Center to post your best score to the global leaderboard and see how you stack up. Signing in is optional, and nothing is submitted until you do.
