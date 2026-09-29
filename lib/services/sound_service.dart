@@ -45,6 +45,10 @@ const _kMusicVolume = 0.6;
 /// Cross-fade between tracks, and fade-out when the music stops.
 const _kMusicFade = Duration(milliseconds: 600);
 
+/// Silence before the wave track starts in a new game, so its opening
+/// isn't lost under the start sound while the player gets going.
+const _kNewGameMusicDelay = Duration(seconds: 2);
+
 const _kSoundOn = 'sound_on';
 const _kMusicOn = 'music_on';
 
@@ -94,6 +98,10 @@ class SoundService extends ChangeNotifier {
   /// Pending pauses at the end of a fade-out, cancelled if the voice is
   /// wanted again before then.
   final Map<SoundHandle, Timer> _pauseTimers = {};
+
+  /// Pending start of the wave track in a new game (see [newGameMusic]),
+  /// cancelled by any other music change before then.
+  Timer? _newGameTimer;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -158,11 +166,14 @@ class SoundService extends ChangeNotifier {
     await prefs.setBool(_kMusicOn, _musicEnabled);
   }
 
-  /// Starts the wave track from the top, for a new game.
+  /// Starts the wave track from the top, for a new game, after
+  /// [_kNewGameMusicDelay].
   void newGameMusic() {
+    _setMusic(Music.none);
     final voice = _waveVoice;
-    if (voice != null) _engine.seek(voice, Duration.zero);
-    _setMusic(Music.wave);
+    if (voice == null) return;
+    _engine.seek(voice, Duration.zero);
+    _newGameTimer = Timer(_kNewGameMusicDelay, () => _setMusic(Music.wave));
   }
 
   /// Back to the wave track, where it was paused for the boss.
@@ -180,6 +191,8 @@ class SoundService extends ChangeNotifier {
   void stopMusic() => _setMusic(Music.none);
 
   void _setMusic(Music music) {
+    _newGameTimer?.cancel();
+    _newGameTimer = null;
     _music = music;
     _applyMusic();
   }
