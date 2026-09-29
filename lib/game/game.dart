@@ -182,13 +182,16 @@ class Game {
   /// (in any one colour) that clear the screen.
   static const int streakLength = 5;
 
+  /// Extra points for clearing the screen with a turbo streak.
+  static const int turboBonus = 25;
+
   /// Colour and length of the current run of same-coloured kills. A kill in
   /// another colour starts a new run; a circle that hits nothing ends it.
   int streakMask = 0;
   int streak = 0;
 
-  /// True from one full streak until the next clears the screen or the
-  /// wave's boss is beaten.
+  /// True from one full streak until the next clears the screen, across
+  /// waves and bosses.
   bool turbo = false;
 
   /// Seconds since turbo began and since the screen was last cleared
@@ -469,7 +472,7 @@ class Game {
   }
 
   /// Removes a beaten boss, bursting its shot-away bands, and starts the
-  /// next wave, which ends turbo.
+  /// next wave.
   void _endBoss(Boss b) {
     boss = null;
     for (var i = b.alive; i < Boss.bandCount; i++) {
@@ -477,7 +480,6 @@ class Game {
         Explosion(bossBandRect(b, i).center, b.bands[i], points: 0),
       );
     }
-    turbo = false;
     wave++;
     _waveSpawns = 0;
     waveTime = 0;
@@ -513,6 +515,7 @@ class Game {
   void _clearScreen() {
     turbo = false;
     clearTime = 0;
+    score += turboBonus;
     final masks = {for (final m in monsters) m.mask};
     for (final m in monsters) {
       explosions.add(Explosion(monsterPosition(m), m.mask));

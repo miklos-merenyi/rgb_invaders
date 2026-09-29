@@ -68,7 +68,8 @@ class GamePainter extends CustomPainter {
     // Shot-away boss bands keep falling past the bottom edge.
     canvas.clipRect(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, Paint()..color = Colors.black);
-    if (game.turbo) _paintTurboBackground(canvas, size);
+    canvas.save();
+    _shakeForClear(canvas);
     _paintStars(canvas, size);
     _paintPulse(canvas);
     for (final m in game.monsters) {
@@ -79,6 +80,8 @@ class GamePainter extends CustomPainter {
     for (final e in game.explosions) {
       _paintExplosion(canvas, e);
     }
+    _paintClearWave(canvas, size);
+    canvas.restore();
     _paintLauncher(canvas);
     _paintScore(canvas, size);
     _paintStreak(canvas);
@@ -117,7 +120,55 @@ class GamePainter extends CustomPainter {
       'TURBO!',
       '${Game.streakLength} in a row clears the screen!',
     );
-    _paintBanner(canvas, size, game.clearTime, 'CLEAR!', null);
+    _paintBanner(
+      canvas,
+      size,
+      game.clearTime,
+      'CLEAR!',
+      '+${Game.turboBonus} bonus!',
+    );
+  }
+
+  static const _clearShake = 0.4;
+  static const _clearWaveDuration = 0.7;
+
+  /// Jolts the play-field for a moment after a turbo clear, dying away.
+  void _shakeForClear(Canvas canvas) {
+    final t = game.clearTime;
+    if (t >= _clearShake) return;
+    final k = 10 * (1 - t / _clearShake);
+    canvas.translate(sin(t * 90) * k, cos(t * 77) * k);
+  }
+
+  /// A white flash and three rainbow shockwaves sweeping out from the
+  /// launcher across the whole screen after a turbo clear.
+  void _paintClearWave(Canvas canvas, Size size) {
+    final t = game.clearTime;
+    if (t < 0.2) {
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = Colors.white.withValues(alpha: 0.5 * (1 - t / 0.2)),
+      );
+    }
+    final rainbow = [
+      for (final m in GameColors.rainbow) GameColors.of(m),
+      GameColors.of(GameColors.rainbow.first),
+    ];
+    for (var i = 0; i < 3; i++) {
+      final k = (t - i * 0.12) / _clearWaveDuration;
+      if (k < 0 || k >= 1) continue;
+      final radius = game.maxRadius * (1 - pow(1 - k, 2));
+      final rect = Rect.fromCircle(center: game.origin, radius: radius);
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 18 * (1 - k) + 4
+        ..shader = SweepGradient(
+          colors: [for (final c in rainbow) c.withValues(alpha: (1 - k) * 0.9)],
+          transform: GradientRotation(t * 6 + i),
+        ).createShader(rect);
+      // A path, not drawCircle; see [_paintPulse].
+      canvas.drawPath(Path()..addOval(rect), paint);
+    }
   }
 
   /// A title fading in and out over [_bannerDuration] seconds from [t] = 0.
@@ -162,47 +213,16 @@ class GamePainter extends CustomPainter {
     );
   }
 
-  /// Purple-to-blue glow that fades in as turbo begins and gently pulses.
-  void _paintTurboBackground(Canvas canvas, Size size) {
-    final fadeIn = min(1.0, game.turboTime / 0.5);
-    final alpha = fadeIn * (0.8 + 0.2 * sin(clock() * 4));
-    final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF3A0A5C).withValues(alpha: alpha),
-            const Color(0xFF0A1450).withValues(alpha: alpha),
-          ],
-        ).createShader(rect),
-    );
-  }
-
-  /// Drifting stars, stretched into warp streaks during turbo.
   void _paintStars(Canvas canvas, Size size) {
     final t = clock();
     final paint = Paint()..color = Colors.white.withValues(alpha: 0.55);
     for (final s in _stars) {
       final y = (s.y + t * s.speed) % 1.0;
-      final c = Offset(s.x * size.width, y * size.height);
-      if (game.turbo) {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: c,
-              width: s.size * 2,
-              height: s.speed * size.height * 1.5,
-            ),
-            Radius.circular(s.size),
-          ),
-          paint,
-        );
-      } else {
-        canvas.drawCircle(c, s.size, paint);
-      }
+      canvas.drawCircle(
+        Offset(s.x * size.width, y * size.height),
+        s.size,
+        paint,
+      );
     }
   }
 
@@ -396,7 +416,8 @@ class GamePainter extends CustomPainter {
   }
 
   /// One pip per kill of the current streak under the score, in the
-  /// streak's colour, with "TURBO" beside them while it lasts.
+  /// streak's colour, and "TURBO" beside them: faint until turbo is on,
+  /// then flashing.
   void _paintStreak(Canvas canvas) {
     if (game.phase != GamePhase.playing) return;
     const pip = 10.0;
@@ -417,15 +438,24 @@ class GamePainter extends CustomPainter {
         );
       }
     }
-    if (!game.turbo) return;
+    const turboColor = Color(0xFFFF3DF5);
+    final flashOn = sin(clock() * 8 * pi) > 0; // 4 flashes a second
     final tp = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: 'TURBO',
         style: TextStyle(
-          color: Color(0xFFFF3DF5),
+          color: !game.turbo
+              ? Colors.white.withValues(alpha: 0.2)
+              : flashOn
+              ? turboColor
+              : turboColor.withValues(alpha: 0.3),
           fontSize: 14,
           fontWeight: FontWeight.w900,
           letterSpacing: 2,
+          shadows: [
+            if (game.turbo && flashOn)
+              const Shadow(color: turboColor, blurRadius: 10),
+          ],
         ),
       ),
       textDirection: TextDirection.ltr,

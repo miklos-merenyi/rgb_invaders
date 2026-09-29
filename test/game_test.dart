@@ -353,18 +353,19 @@ void main() {
         ..add(_monsterAt(g, 7, 0.15));
       kill(g, GameColors.blue);
       expect(g.monsters, isEmpty);
-      expect(g.score, before + 1 + 2 + 3);
+      expect(g.score, before + 1 + 2 + 3 + Game.turboBonus);
       expect(g.turbo, isFalse);
       expect(cleared, [
         {GameColors.red | GameColors.green, 7},
       ]);
     });
 
-    test('turbo lasts through the boss and ends when it is beaten', () {
+    test('turbo lasts through the boss into the next wave', () {
       final g = _bossGame()..turbo = true;
       _beatBoss(g);
       expect(g.boss, isNull);
-      expect(g.turbo, isFalse);
+      expect(g.wave, 2);
+      expect(g.turbo, isTrue);
     });
 
     test('a turbo streak finished on the boss destroys it', () {
@@ -379,8 +380,8 @@ void main() {
       expect(g.boss, isNull);
       expect(g.turbo, isFalse);
       expect(waves, [2]);
-      // Green band 1, the other seven bands 12, and the boss bonus.
-      expect(g.score, 1 + 12 + Game.bossBonus);
+      // Green band 1, the other seven bands 12, and both bonuses.
+      expect(g.score, 1 + 12 + Game.bossBonus + Game.turboBonus);
     });
   });
 }
