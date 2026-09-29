@@ -379,6 +379,7 @@ class _GameScreenState extends State<GameScreen>
               const SizedBox(height: 40),
               if (over) _buildShareLink(),
               if (LeaderboardService().enabled) _buildLeaderboardLink(),
+              _buildMusicLink(),
               _buildSupportLink(),
             ],
           ),
@@ -467,6 +468,69 @@ class _GameScreenState extends State<GameScreen>
       child: const Padding(
         padding: EdgeInsets.all(8),
         child: Text('🏆 Leaderboard', style: _linkStyle),
+      ),
+    );
+  }
+
+  Widget _buildMusicLink() {
+    return GestureDetector(
+      onTap: _showMusicCredits,
+      child: const Padding(
+        padding: EdgeInsets.all(8),
+        child: Text('🎵 About the music', style: _linkStyle),
+      ),
+    );
+  }
+
+  Future<void> _showMusicCredits() {
+    const body = TextStyle(color: Colors.white60, height: 1.5);
+    const heading = TextStyle(
+      color: Colors.white70,
+      fontWeight: FontWeight.w600,
+      height: 1.5,
+    );
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        scrollable: true,
+        backgroundColor: const Color(0xFF1A1A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'About the music',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('During the waves', style: heading),
+            Text(
+              'Rumination Blues\n© 2026 Miklos Merenyi. All rights reserved.',
+              style: body,
+            ),
+            SizedBox(height: 16),
+            Text('During the boss fights', style: heading),
+            Text(
+              "Excerpts from Modest Mussorgsky's 'Pictures at an Exhibition' "
+              "(Gnomus; The Hut on Hen's Legs), from the edition typeset by "
+              'Knute Snortum for the Mutopia Project (mutopiaproject.org).\n'
+              'Excerpted and rendered by Miklos Merenyi.\n'
+              'Licensed under CC BY-SA 4.0 '
+              '(creativecommons.org/licenses/by-sa/4.0).',
+              style: body,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK', style: TextStyle(color: Colors.white70)),
+          ),
+        ],
       ),
     );
   }
