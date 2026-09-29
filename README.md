@@ -96,7 +96,7 @@ One global leaderboard, using Game Center on iOS and Play Games on Android:
 Before a release (the leaderboard is hidden until this is done):
 
 1. App Store Connect: enable Game Center for the app and create a Classic
-   leaderboard, e.g. `com.mermik.rgbinvaders.leaderboard`, sorted high to low.
+   leaderboard, `com.mermik.rgbinvaders.highscores`, sorted high to low.
    The Game Center entitlement is already in `ios/Runner/Runner.entitlements`.
 2. Play Console: set up Play Games Services, create a leaderboard, add the
    SHA-1 fingerprints (debug, upload and app signing key) to the credentials,

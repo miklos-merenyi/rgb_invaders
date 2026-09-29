@@ -7,12 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ── Leaderboard IDs ───────────────────────────────────────────────────────────
 // One global leaderboard, via Game Center on iOS and Play Games on Android.
 //
-// TODO: create the leaderboard in App Store Connect (Game Center) and Play
-// Console, then fill in the IDs below, plus the Play Games project ID in
+// TODO: create the leaderboard in Play Console, then fill in the Android ID
+// below, plus the Play Games project ID in
 // android/app/src/main/res/values/games-ids.xml. While the ID for the current
 // platform is empty, leaderboards are switched off and never touch the SDK.
 
-const _kIosLeaderboardId = '';
+const _kIosLeaderboardId = 'com.mermik.rgbinvaders.highscores';
 const _kAndroidLeaderboardId = '';
 
 String get _leaderboardId =>
