@@ -47,7 +47,9 @@ class _GameScreenState extends State<GameScreen>
     ..onBoss = (() {
       _sounds.start();
       _sounds.bossMusic(_game.wave);
-    });
+    })
+    ..onTurbo = _sounds.start
+    ..onClear = ((masks) => masks.forEach(_sounds.explosion));
   final _sounds = SoundService();
   late final Ticker _ticker;
   final _frame = ValueNotifier<int>(0);
@@ -363,7 +365,9 @@ class _GameScreenState extends State<GameScreen>
                   'Every 25 monsters a new wave starts slower again,\n'
                   'but they come in pairs, then threes…\n'
                   'Between waves a boss descends: shoot its\n'
-                  'lowest colour to peel it away, band by band.',
+                  'lowest colour to peel it away, band by band.\n'
+                  'Hit 5 of one colour in a row for TURBO,\n'
+                  'then 5 more in a row to clear the screen!',
                   textAlign: TextAlign.center,
                   style: body,
                 ),

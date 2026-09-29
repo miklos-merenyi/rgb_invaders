@@ -172,6 +172,30 @@ class Game {
   /// Called when a boss appears.
   void Function()? onBoss;
 
+  /// Called when a full streak switches turbo on.
+  void Function()? onTurbo;
+
+  /// Called with the colours blown up when a turbo streak clears the screen.
+  void Function(Set<int> masks)? onClear;
+
+  /// Same-coloured kills in a row that switch turbo on, and then again
+  /// (in any one colour) that clear the screen.
+  static const int streakLength = 5;
+
+  /// Colour and length of the current run of same-coloured kills. A kill in
+  /// another colour starts a new run; a circle that hits nothing ends it.
+  int streakMask = 0;
+  int streak = 0;
+
+  /// True from one full streak until the next clears the screen or the
+  /// wave's boss is beaten.
+  bool turbo = false;
+
+  /// Seconds since turbo began and since the screen was last cleared
+  /// (drive their banners).
+  double turboTime = double.infinity;
+  double clearTime = double.infinity;
+
   double get monsterRadius => min(size.width * 0.065, 30);
 
   Offset get origin => Offset(size.width / 2, size.height);
@@ -302,6 +326,10 @@ class Game {
     wave = 1;
     _waveSpawns = 0;
     waveTime = 0;
+    _endStreak();
+    turbo = false;
+    turboTime = double.infinity;
+    clearTime = double.infinity;
     _spawnTimer = 1.2;
     phase = GamePhase.playing;
   }
@@ -327,6 +355,8 @@ class Game {
     waveTime += dt;
 
     bossTime += dt;
+    turboTime += dt;
+    clearTime += dt;
 
     if (_bossPending) {
       // The boss waits for the rest of its wave to be cleared.
@@ -429,22 +459,82 @@ class Game {
     var points = GameColors.buttonsFor(mask);
     if (b.alive == 0) {
       points += bossBonus;
-      boss = null;
-      for (var i = 0; i < Boss.bandCount; i++) {
-        explosions.add(
-          Explosion(bossBandRect(b, i).center, b.bands[i], points: 0),
-        );
-      }
-      wave++;
-      _waveSpawns = 0;
-      waveTime = 0;
-      _spawnTimer = waveBreak;
-      onWave?.call(wave);
+      _endBoss(b);
     }
     explosions.add(Explosion(rect.center, mask, points: points));
     score += points;
     pulse = null;
     onHit?.call(mask);
+    _countKill(mask);
+  }
+
+  /// Removes a beaten boss, bursting its shot-away bands, and starts the
+  /// next wave, which ends turbo.
+  void _endBoss(Boss b) {
+    boss = null;
+    for (var i = b.alive; i < Boss.bandCount; i++) {
+      explosions.add(
+        Explosion(bossBandRect(b, i).center, b.bands[i], points: 0),
+      );
+    }
+    turbo = false;
+    wave++;
+    _waveSpawns = 0;
+    waveTime = 0;
+    _spawnTimer = waveBreak;
+    onWave?.call(wave);
+  }
+
+  void _countKill(int mask) {
+    if (mask == streakMask) {
+      streak++;
+    } else {
+      streakMask = mask;
+      streak = 1;
+    }
+    if (streak < streakLength) return;
+    _endStreak();
+    if (turbo) {
+      _clearScreen();
+    } else {
+      turbo = true;
+      turboTime = 0;
+      onTurbo?.call();
+    }
+  }
+
+  void _endStreak() {
+    streakMask = 0;
+    streak = 0;
+  }
+
+  /// Blows up every monster on screen and the boss's remaining bands,
+  /// scoring each as a normal hit (plus the boss bonus), and ends turbo.
+  void _clearScreen() {
+    turbo = false;
+    clearTime = 0;
+    final masks = {for (final m in monsters) m.mask};
+    for (final m in monsters) {
+      explosions.add(Explosion(monsterPosition(m), m.mask));
+      score += GameColors.buttonsFor(m.mask);
+    }
+    monsters.clear();
+    final b = boss;
+    if (b != null && b.alive > 0) {
+      for (var i = 0; i < b.alive; i++) {
+        final mask = b.bands[i];
+        final points =
+            GameColors.buttonsFor(mask) + (i == b.alive - 1 ? bossBonus : 0);
+        explosions.add(
+          Explosion(bossBandRect(b, i).center, mask, points: points),
+        );
+        score += points;
+        masks.add(mask);
+      }
+      b.alive = 0;
+      _endBoss(b);
+    }
+    onClear?.call(masks);
   }
 
   /// Distance from the launcher to the nearest point of [rect].
@@ -489,8 +579,10 @@ class Game {
       score += GameColors.buttonsFor(hit.mask);
       pulse = null;
       onHit?.call(hit.mask);
+      _countKill(hit.mask);
     } else if (p.radius > maxRadius) {
       pulse = null;
+      _endStreak();
       onMiss?.call();
     }
   }
@@ -498,6 +590,7 @@ class Game {
   void _gameOver() {
     phase = GamePhase.over;
     pulse = null;
+    turbo = false;
     best = max(best, score);
   }
 }

@@ -292,4 +292,95 @@ void main() {
     g.update(1 / 60);
     expect(g.phase, GamePhase.over);
   });
+
+  group('turbo', () {
+    /// Shoots one [mask] monster placed in the middle of the field.
+    void kill(Game g, int mask) {
+      g.monsters.add(_monsterAt(g, mask, 0.5));
+      g.fire(mask);
+      _runPulse(g);
+    }
+
+    test('five same-coloured kills in a row switch turbo on', () {
+      final g = _newGame();
+      var turbos = 0;
+      g.onTurbo = () => turbos++;
+      for (var i = 0; i < 4; i++) {
+        kill(g, GameColors.red);
+      }
+      expect(g.streak, 4);
+      expect(g.turbo, isFalse);
+      kill(g, GameColors.red);
+      expect(g.turbo, isTrue);
+      expect(g.streak, 0);
+      expect(turbos, 1);
+    });
+
+    test('another colour restarts the streak', () {
+      final g = _newGame();
+      for (var i = 0; i < 4; i++) {
+        kill(g, GameColors.red);
+      }
+      kill(g, GameColors.blue);
+      expect(g.streakMask, GameColors.blue);
+      expect(g.streak, 1);
+      expect(g.turbo, isFalse);
+    });
+
+    test('a circle that hits nothing ends the streak', () {
+      final g = _newGame();
+      for (var i = 0; i < 3; i++) {
+        kill(g, GameColors.green);
+      }
+      g.fire(GameColors.green);
+      _runPulse(g);
+      expect(g.streak, 0);
+    });
+
+    test('a second streak in turbo clears the screen and scores it', () {
+      final g = _newGame();
+      final cleared = <Set<int>>[];
+      g.onClear = cleared.add;
+      for (var i = 0; i < 5; i++) {
+        kill(g, GameColors.red);
+      }
+      for (var i = 0; i < 4; i++) {
+        kill(g, GameColors.blue);
+      }
+      final before = g.score;
+      g.monsters
+        ..add(_monsterAt(g, GameColors.red | GameColors.green, 0.1))
+        ..add(_monsterAt(g, 7, 0.15));
+      kill(g, GameColors.blue);
+      expect(g.monsters, isEmpty);
+      expect(g.score, before + 1 + 2 + 3);
+      expect(g.turbo, isFalse);
+      expect(cleared, [
+        {GameColors.red | GameColors.green, 7},
+      ]);
+    });
+
+    test('turbo lasts through the boss and ends when it is beaten', () {
+      final g = _bossGame()..turbo = true;
+      _beatBoss(g);
+      expect(g.boss, isNull);
+      expect(g.turbo, isFalse);
+    });
+
+    test('a turbo streak finished on the boss destroys it', () {
+      final g = _bossGame()
+        ..turbo = true
+        ..streakMask = GameColors.green
+        ..streak = 4;
+      final waves = <int>[];
+      g.onWave = waves.add;
+      g.fire(GameColors.green); // the lowest band
+      _runPulse(g);
+      expect(g.boss, isNull);
+      expect(g.turbo, isFalse);
+      expect(waves, [2]);
+      // Green band 1, the other seven bands 12, and the boss bonus.
+      expect(g.score, 1 + 12 + Game.bossBonus);
+    });
+  });
 }

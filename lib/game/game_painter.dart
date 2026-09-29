@@ -68,6 +68,7 @@ class GamePainter extends CustomPainter {
     // Shot-away boss bands keep falling past the bottom edge.
     canvas.clipRect(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, Paint()..color = Colors.black);
+    if (game.turbo) _paintTurboBackground(canvas, size);
     _paintStars(canvas, size);
     _paintPulse(canvas);
     for (final m in game.monsters) {
@@ -80,8 +81,10 @@ class GamePainter extends CustomPainter {
     }
     _paintLauncher(canvas);
     _paintScore(canvas, size);
+    _paintStreak(canvas);
     _paintWaveBanner(canvas, size);
     _paintBossBanner(canvas, size);
+    _paintTurboBanners(canvas, size);
   }
 
   static const _bannerDuration = 2.6;
@@ -104,6 +107,17 @@ class GamePainter extends CustomPainter {
   void _paintBossBanner(Canvas canvas, Size size) {
     if (game.boss == null) return;
     _paintBanner(canvas, size, game.bossTime, 'BOSS', 'hit its lowest colour!');
+  }
+
+  void _paintTurboBanners(Canvas canvas, Size size) {
+    _paintBanner(
+      canvas,
+      size,
+      game.turboTime,
+      'TURBO!',
+      '${Game.streakLength} in a row clears the screen!',
+    );
+    _paintBanner(canvas, size, game.clearTime, 'CLEAR!', null);
   }
 
   /// A title fading in and out over [_bannerDuration] seconds from [t] = 0.
@@ -148,16 +162,47 @@ class GamePainter extends CustomPainter {
     );
   }
 
+  /// Purple-to-blue glow that fades in as turbo begins and gently pulses.
+  void _paintTurboBackground(Canvas canvas, Size size) {
+    final fadeIn = min(1.0, game.turboTime / 0.5);
+    final alpha = fadeIn * (0.8 + 0.2 * sin(clock() * 4));
+    final rect = Offset.zero & size;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF3A0A5C).withValues(alpha: alpha),
+            const Color(0xFF0A1450).withValues(alpha: alpha),
+          ],
+        ).createShader(rect),
+    );
+  }
+
+  /// Drifting stars, stretched into warp streaks during turbo.
   void _paintStars(Canvas canvas, Size size) {
     final t = clock();
     final paint = Paint()..color = Colors.white.withValues(alpha: 0.55);
     for (final s in _stars) {
       final y = (s.y + t * s.speed) % 1.0;
-      canvas.drawCircle(
-        Offset(s.x * size.width, y * size.height),
-        s.size,
-        paint,
-      );
+      final c = Offset(s.x * size.width, y * size.height);
+      if (game.turbo) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: c,
+              width: s.size * 2,
+              height: s.speed * size.height * 1.5,
+            ),
+            Radius.circular(s.size),
+          ),
+          paint,
+        );
+      } else {
+        canvas.drawCircle(c, s.size, paint);
+      }
     }
   }
 
@@ -348,6 +393,50 @@ class GamePainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, Offset(16, 12));
+  }
+
+  /// One pip per kill of the current streak under the score, in the
+  /// streak's colour, with "TURBO" beside them while it lasts.
+  void _paintStreak(Canvas canvas) {
+    if (game.phase != GamePhase.playing) return;
+    const pip = 10.0;
+    const gap = 6.0;
+    const top = 50.0;
+    final color = GameColors.of(game.streakMask);
+    for (var i = 0; i < Game.streakLength; i++) {
+      final rect = Rect.fromLTWH(16 + i * (pip + gap), top, pip, pip);
+      if (i < game.streak) {
+        canvas.drawRect(rect, Paint()..color = color);
+      } else {
+        canvas.drawRect(
+          rect.deflate(0.75),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = Colors.white.withValues(alpha: 0.3),
+        );
+      }
+    }
+    if (!game.turbo) return;
+    final tp = TextPainter(
+      text: const TextSpan(
+        text: 'TURBO',
+        style: TextStyle(
+          color: Color(0xFFFF3DF5),
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 2,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(
+      canvas,
+      Offset(
+        16 + Game.streakLength * (pip + gap) + 4,
+        top + pip / 2 - tp.height / 2,
+      ),
+    );
   }
 
   @override
