@@ -42,6 +42,12 @@ xcrun simctl launch $SIM com.mermik.rgbinvaders
 xcrun simctl io $SIM screenshot shot.png     # repeat at good moments
 ```
 
+Add `--dart-define=DEMO_TIPJAR=true` to open the tip jar over the demo's final
+game-over screen, `DEMO_WAVE=n` to start at wave n (bosses cycle through the
+three invader shapes: wave 1 jelly, 2 bat, 3 urchin) and `DEMO_SECONDS=n` to
+end sooner. Taking a screenshot every second or so in a loop and picking the
+best frames afterwards works well.
+
 Simulator screenshots have an alpha channel, which App Store Connect rejects:
 
 ```sh

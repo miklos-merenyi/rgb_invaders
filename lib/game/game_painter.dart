@@ -4,29 +4,87 @@ import 'package:flutter/material.dart';
 
 import 'game.dart';
 
-/// Two animation frames of the invader sprite, 11x8 pixels.
+/// Two animation frames of the primary-colour invader (also the icon), 11x8
+/// pixels.
 const invaderFrames = [
   [
-    '..X.....X..',
-    '...X...X...',
-    '..XXXXXXX..',
-    '.XX.XXX.XX.',
+    '...XXXXX...',
+    '.XXXXXXXXX.',
+    'XXXX...XXXX',
+    'XXXX.X.XXXX',
+    'XXXX...XXXX',
     'XXXXXXXXXXX',
-    'X.XXXXXXX.X',
-    'X.X.....X.X',
-    '...XX.XX...',
+    'X.X.X.X.X.X',
+    '.X.X.X.X.X.',
   ],
   [
-    '..X.....X..',
-    'X..X...X..X',
-    'X.XXXXXXX.X',
-    'XXX.XXX.XXX',
-    'XXXXXXXXXXX',
+    '...XXXXX...',
     '.XXXXXXXXX.',
-    '..X.....X..',
-    '.X.......X.',
+    'XXXX...XXXX',
+    'XXXX.X.XXXX',
+    'XXXX...XXXX',
+    'XXXXXXXXXXX',
+    '.X.X.X.X.X.',
+    'X.X.X.X.X.X',
   ],
 ];
+
+/// The mixed-colour (two-button) invader, a bat flapping its wings. Every
+/// row has pixels in both frames, since each row is a boss band.
+const batFrames = [
+  [
+    'X.........X',
+    'XX..X.X..XX',
+    'XXX.XXX.XXX',
+    'XXXXXXXXXXX',
+    '.XXX.X.XXX.',
+    '..XXXXXXX..',
+    '...X.X.X...',
+    '..X.....X..',
+  ],
+  [
+    '....X.X....',
+    '...XXXXX...',
+    '..XXXXXXX..',
+    '.XXXXXXXXX.',
+    'XXXX.X.XXXX',
+    'XXXXXXXXXXX',
+    'XX.X.X.X.XX',
+    'X..X...X..X',
+  ],
+];
+
+/// The white (three-button) invader, a spiky urchin whose spikes pulse.
+const urchinFrames = [
+  [
+    '.....X.....',
+    '.X..XXX..X.',
+    '..XXXXXXX..',
+    '.XXX.X.XXX.',
+    'XXXXXXXXXXX',
+    '.XXX...XXX.',
+    '..XXXXXXX..',
+    '.X..XXX..X.',
+  ],
+  [
+    'X....X....X',
+    '..X.XXX.X..',
+    '..XXXXXXX..',
+    'XXXX.X.XXXX',
+    '.XXXXXXXXX.',
+    'XXXX...XXXX',
+    '..XXXXXXX..',
+    'X...XXX...X',
+  ],
+];
+
+/// The three invader sprites, by how many buttons make their colour (minus
+/// one). Also indexed by [Boss.shape].
+const shapeFrames = [invaderFrames, batFrames, urchinFrames];
+
+/// The sprite for an invader of colour [mask].
+List<List<String>> framesFor(int mask) =>
+    shapeFrames[GameColors.buttonsFor(mask) - 1];
 
 class _Star {
   _Star(this.x, this.y, this.size, this.speed);
@@ -230,7 +288,7 @@ class GamePainter extends CustomPainter {
     final center = game.monsterPosition(m);
     final r = game.monsterRadius;
     final color = GameColors.of(m.mask);
-    final frame = invaderFrames[(m.age * 3).floor() % 2];
+    final frame = framesFor(m.mask)[(m.age * 3).floor() % 2];
     final px = 2 * r / 11;
     final top = center.dy - px * 4;
     final left = center.dx - px * 5.5;
@@ -262,7 +320,7 @@ class GamePainter extends CustomPainter {
   void _paintBoss(Canvas canvas, Boss b) {
     final px = game.bossPixel;
     final topLeft = game.bossTopLeft(b);
-    final frame = invaderFrames[(b.age * 1.5).floor() % 2];
+    final frame = shapeFrames[b.shape][(b.age * 1.5).floor() % 2];
     final targetGlow = 0.35 + 0.25 * sin(clock() * 8);
 
     for (var i = 0; i < b.alive; i++) {

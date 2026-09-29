@@ -75,13 +75,22 @@ class Pulse {
 /// shot away from the bottom up, and only the lowest remaining one can be
 /// hit. Shot-away bands stay (see-through) and keep descending with it.
 class Boss {
-  Boss({required this.bands, required this.speed, required this.y});
+  Boss({
+    required this.bands,
+    required this.speed,
+    required this.y,
+    this.shape = 0,
+  });
 
   /// One band per sprite row.
   static const int bandCount = 8;
 
   /// Band colours, top to bottom, one per sprite row.
   final List<int> bands;
+
+  /// Which invader it looks like: 0 primary, 1 mixed, 2 white. Bosses take
+  /// turns, wave by wave.
+  final int shape;
 
   /// Fall speed in play-field heights per second.
   final double speed;
@@ -445,6 +454,7 @@ class Game {
     boss = Boss(
       bands: bands,
       speed: bossSpeedFor(wave),
+      shape: (wave - 1) % 3,
       y: -8 * bossPixel / size.height,
     );
     bossTime = 0;

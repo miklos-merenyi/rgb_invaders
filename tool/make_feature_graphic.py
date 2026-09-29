@@ -31,6 +31,29 @@ MAGENTA = (0xFF, 0x3D, 0xF5)
 CYAN = (0x33, 0xF0, 0xFF)
 WHITE = (0xFF, 0xFF, 0xFF)
 
+# Frame A of the mixed-colour and white sprites in lib/game/game_painter.dart.
+BAT = [
+    "X.........X",
+    "XX..X.X..XX",
+    "XXX.XXX.XXX",
+    "XXXXXXXXXXX",
+    ".XXX.X.XXX.",
+    "..XXXXXXX..",
+    "...X.X.X...",
+    "..X.....X..",
+]
+URCHIN = [
+    ".....X.....",
+    ".X..XXX..X.",
+    "..XXXXXXX..",
+    ".XXX.X.XXX.",
+    "XXXXXXXXXXX",
+    ".XXX...XXX.",
+    "..XXXXXXX..",
+    ".X..XXX..X.",
+]
+SPRITES = {YELLOW: BAT, CYAN: BAT, MAGENTA: BAT, WHITE: URCHIN}
+
 TITLE_FONT = "/System/Library/Fonts/Supplemental/Arial Black.ttf"
 TAGLINE_FONT = ("/System/Library/Fonts/Avenir Next.ttc", 2)  # Demi Bold
 
@@ -88,7 +111,7 @@ def invader(canvas, x, y, width, color):
 
     body = layer()
     d = ImageDraw.Draw(body)
-    for row, line in enumerate(SPRITE):
+    for row, line in enumerate(SPRITES.get(color, SPRITE)):
         for col, ch in enumerate(line):
             if ch == "X":
                 x0, y0 = left + col * p, top + row * p

@@ -26,16 +26,16 @@ IOS_SET = os.path.join(ROOT, "ios/Runner/Assets.xcassets/AppIcon.appiconset")
 RES = os.path.join(ROOT, "android/app/src/main/res")
 STORE = os.path.join(ROOT, "store_assets")
 
-# Same sprite as lib/game/game_painter.dart (frame A).
+# Same sprite as lib/game/game_painter.dart (invaderFrames, frame A).
 SPRITE = [
-    "..X.....X..",
-    "...X...X...",
-    "..XXXXXXX..",
-    ".XX.XXX.XX.",
+    "...XXXXX...",
+    ".XXXXXXXXX.",
+    "XXXX...XXXX",
+    "XXXX.X.XXXX",
+    "XXXX...XXXX",
     "XXXXXXXXXXX",
-    "X.XXXXXXX.X",
-    "X.X.....X.X",
-    "...XX.XX...",
+    "X.X.X.X.X.X",
+    ".X.X.X.X.X.",
 ]
 COLS, ROWS = len(SPRITE[0]), len(SPRITE)
 

@@ -32,6 +32,10 @@ const _kDemoSeconds = int.fromEnvironment('DEMO_SECONDS', defaultValue: 105);
 /// more invaders at once, giving the demo player room to build turbo streaks.
 const _kDemoWave = int.fromEnvironment('DEMO_WAVE', defaultValue: 1);
 
+/// Opens the tip jar over the demo's final game-over screen
+/// (`--dart-define=DEMO_TIPJAR=true`), for its store screenshot.
+const _kDemoTipJar = bool.fromEnvironment('DEMO_TIPJAR');
+
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, this.game});
 
@@ -184,7 +188,12 @@ class _GameScreenState extends State<GameScreen>
     if (_kDemo) {
       // No ads or prompts in the demo. An early loss plays again after a
       // moment; the planned one at the end stays on the game-over screen.
-      if (_demoGivingUp) return;
+      if (_demoGivingUp) {
+        if (!_kDemoTipJar) return;
+        await Future<void>.delayed(const Duration(seconds: 3));
+        if (mounted) await showTipJar(context);
+        return;
+      }
       await Future<void>.delayed(const Duration(seconds: 4));
       if (mounted) _onOverlayTap();
       return;
