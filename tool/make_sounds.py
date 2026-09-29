@@ -5,7 +5,8 @@ Run from the repo root:  python3 tool/make_sounds.py   (needs numpy)
 
 Pitched sounds are in Ab minor, the key of the music. Fire sounds use
 Ab minor pentatonic, one note per colour combination:
-R=Gb4, G=Ab4, B=B4, RG=Db5, RB=Eb5, GB=Gb5, RGB=Ab5.
+R=Gb4, G=Ab4, B=B4, RG=Db5, RB=Eb5, GB=Gb5, RGB=Ab5. Explosions ring on the
+same note an octave lower.
 """
 
 import os
@@ -81,15 +82,19 @@ def fire(freq):
     return x * envelope(len(t))
 
 
-def explosion():
-    """Noise burst with a falling filter and a low thump."""
+def explosion(freq):
+    """Noise burst with a falling filter and a low thump, ringing on the
+    colour's note an octave below its fire sound."""
     rng = np.random.default_rng(1)
     t = t_axis(0.55)
     noise = rng.uniform(-1, 1, len(t))
-    crackle = lowpass(noise, 7000 * np.exp(-t / 0.09) + 250)
+    bright = freq / FIRE_NOTES[2]  # higher colours crackle a little brighter
+    crackle = lowpass(noise, (7000 * np.exp(-t / 0.09) + 250) * bright)
     crackle *= np.exp(-t / 0.13)
     thump = np.sin(sweep_phase(40 + 90 * np.exp(-t / 0.05))) * np.exp(-t / 0.09)
-    return (crackle * 1.2 + thump) * envelope(len(t), attack=0.001)
+    ph = 2 * np.pi * freq / 2 * t
+    ring = (np.sin(ph) + 0.3 * np.sin(2 * ph)) * np.exp(-t / 0.16)
+    return (crackle * 1.2 + thump + ring * 0.9) * envelope(len(t), attack=0.001)
 
 
 def miss():
@@ -143,7 +148,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     for mask, freq in FIRE_NOTES.items():
         save(f"fire_{mask}", fire(freq), 0.7)
-    save("explosion", explosion(), 0.9)
+        save(f"explosion_{mask}", explosion(freq), 0.9)
     save("miss", miss(), 0.4)
     save("dud", dud(), 0.35)
     save("game_over", game_over(), 0.4)

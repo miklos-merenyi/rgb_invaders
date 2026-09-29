@@ -15,7 +15,15 @@ const _kFireAssets = {
   6: 'assets/sounds/fire_6.wav',
   7: 'assets/sounds/fire_7.wav',
 };
-const _kExplosion = 'assets/sounds/explosion.wav';
+const _kExplosionAssets = {
+  1: 'assets/sounds/explosion_1.wav',
+  2: 'assets/sounds/explosion_2.wav',
+  3: 'assets/sounds/explosion_3.wav',
+  4: 'assets/sounds/explosion_4.wav',
+  5: 'assets/sounds/explosion_5.wav',
+  6: 'assets/sounds/explosion_6.wav',
+  7: 'assets/sounds/explosion_7.wav',
+};
 const _kMiss = 'assets/sounds/miss.wav';
 const _kDud = 'assets/sounds/dud.wav';
 const _kGameOver = 'assets/sounds/game_over.wav';
@@ -108,7 +116,7 @@ class SoundService extends ChangeNotifier {
       }
       for (final asset in [
         ..._kFireAssets.values,
-        _kExplosion,
+        ..._kExplosionAssets.values,
         _kMiss,
         _kDud,
         _kGameOver,
@@ -222,7 +230,8 @@ class SoundService extends ChangeNotifier {
   }
 
   void fire(int mask) => _play(_kFireAssets[mask] ?? _kFireAssets[7]!);
-  void explosion() => _play(_kExplosion);
+  void explosion(int mask) =>
+      _play(_kExplosionAssets[mask] ?? _kExplosionAssets[7]!);
   void miss() => _play(_kMiss);
   void dud() => _play(_kDud);
   void gameOver() => _play(_kGameOver);

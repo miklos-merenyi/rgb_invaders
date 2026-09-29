@@ -38,7 +38,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin {
   late final Game _game = (widget.game ?? Game())
-    ..onHit = ((_) => _sounds.explosion())
+    ..onHit = _sounds.explosion
     ..onMiss = _sounds.miss
     ..onWave = ((_) {
       _sounds.start();
