@@ -383,5 +383,32 @@ void main() {
       // Green band 1, the other seven bands 12, and both bonuses.
       expect(g.score, 1 + 12 + Game.bossBonus + Game.turboBonus);
     });
+
+    test('a boss held back by a turbo clear waits three seconds', () {
+      final g = _newGame()..spawning = true;
+      // Play the wave out until its last monster is on screen.
+      while (g.spawned < Game.waveLength) {
+        g.monsters.clear();
+        g.update(1 / 20);
+      }
+      g.spawning = false;
+      final last = g.monsters.single..y = 0.5;
+      g
+        ..turbo = true
+        ..streakMask = last.mask
+        ..streak = 4;
+      g.fire(last.mask);
+      _runPulse(g);
+      expect(g.monsters, isEmpty);
+      expect(g.turbo, isFalse);
+      for (var t = 0.0; t < Game.bossAfterClearDelay - 0.2; t += 0.05) {
+        g.update(0.05);
+      }
+      expect(g.boss, isNull);
+      for (var i = 0; i < 10; i++) {
+        g.update(0.05);
+      }
+      expect(g.boss, isNotNull);
+    });
   });
 }

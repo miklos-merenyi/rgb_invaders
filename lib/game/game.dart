@@ -286,6 +286,10 @@ class Game {
   /// Extra points for shooting away a boss's last band.
   static const int bossBonus = 10;
 
+  /// Seconds a boss holds back when a turbo clear removed the last of its
+  /// wave, so the CLEAR and BOSS banners don't overlap.
+  static const double bossAfterClearDelay = 3.0;
+
   static double bossSpeedFor(int wave) =>
       min(bossStartSpeed + (wave - 1) * bossSpeedStep, bossMaxSpeed);
 
@@ -362,8 +366,9 @@ class Game {
     clearTime += dt;
 
     if (_bossPending) {
-      // The boss waits for the rest of its wave to be cleared.
-      if (monsters.isEmpty) _spawnBoss();
+      // The boss waits for the rest of its wave to be cleared, and after a
+      // turbo clear until its banner has gone.
+      if (monsters.isEmpty && clearTime >= bossAfterClearDelay) _spawnBoss();
     } else if (boss == null) {
       _spawnTimer -= dt;
       if (spawning && _spawnTimer <= 0) {
