@@ -43,6 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
 
 # Raw phone screen recordings (too big for git)
 store_assets/video/screen-*.mp4
