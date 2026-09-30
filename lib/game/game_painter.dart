@@ -29,8 +29,8 @@ const invaderFrames = [
   ],
 ];
 
-/// The mixed-colour (two-button) invader, a bat flapping its wings. Every
-/// row has pixels in both frames, since each row is a boss band.
+/// The mixed-colour (two-button) invader, a bat twitching its wing tips and
+/// feet. Every row has pixels in both frames, since each row is a boss band.
 const batFrames = [
   [
     'X.........X',
@@ -43,14 +43,14 @@ const batFrames = [
     '..X.....X..',
   ],
   [
-    '....X.X....',
-    '...XXXXX...',
-    '..XXXXXXX..',
-    '.XXXXXXXXX.',
-    'XXXX.X.XXXX',
+    '.X.......X.',
+    'XX..X.X..XX',
+    'XXX.XXX.XXX',
     'XXXXXXXXXXX',
-    'XX.X.X.X.XX',
-    'X..X...X..X',
+    '.XXX.X.XXX.',
+    '..XXXXXXX..',
+    '...X.X.X...',
+    '...X...X...',
   ],
 ];
 
