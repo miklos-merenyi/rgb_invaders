@@ -6,16 +6,14 @@ so the keywords go into the text itself (Play has no keyword field). Use them
 naturally: Play penalises keyword lists and heavy repetition.
 
 Main search terms: arcade shooter, space shooter, retro, pixel, alien
-invaders, color mixing, color matching, puzzle, reflex, boss fights, offline.
+invaders, colour mixing, colour matching, puzzle, reflex, boss fights, offline.
 
-Written in US spelling ("color") for the en-US default listing, where most
-searches come from. An English (United Kingdom) translation can switch back
-to "colour".
+Written in UK spelling ("colour"), like the game itself.
 
 
 APP NAME (max 30 chars)
 -----------------------
-RGB Invaders: Color Shooter
+RGB Invaders: Colour Shooter
 
 
 SHORT DESCRIPTION (max 80 chars)
@@ -27,28 +25,28 @@ FULL DESCRIPTION (max 4000 chars)
 ---------------------------------
 Red, green and blue. That's all you need — and all you get.
 
-RGB Invaders is a fast retro arcade shooter with a color-mixing puzzle twist. Pixel alien invaders in seven colors rain down from space, and only the right color can stop them. Fire an expanding ring of color at the invaders, but a ring only destroys an invader of its own color. Everything else it passes straight through.
+RGB Invaders is a fast retro arcade shooter with a colour-mixing puzzle twist. Pixel alien invaders in seven colours rain down from space, and only the right colour can stop them. Fire an expanding ring of colour at the invaders, but a ring only destroys an invader of its own colour. Everything else it passes straight through.
 
-It's a classic space shooter that also tests your reflexes and your brain: read the colors, mix the right shot, and fire before they land.
+It's a classic space shooter that also tests your reflexes and your brain: read the colours, mix the right shot, and fire before they land.
 
 MIX YOUR SHOTS
-Tap Red, Green or Blue to fire that color. Press buttons together to mix colors:
+Tap Red, Green or Blue to fire that colour. Press buttons together to mix colours:
 • Red + Green = Yellow
 • Green + Blue = Cyan
 • Red + Blue = Magenta
 • Red + Green + Blue = White
 
-Only one ring can be on screen at a time, so every shot counts. Pick the wrong color and you waste precious seconds while the invaders keep coming.
+Only one ring can be on screen at a time, so every shot counts. Pick the wrong colour and you waste precious seconds while the invaders keep coming.
 
 EPIC BOSS FIGHTS
-Clear a wave and a huge boss invader descends, striped with eight colored bands in a random order.
-• Only the color of its lowest band can hurt it. Hit it and that band is blasted away, exposing the next one up.
-• Fire the wrong color and the boss lurches down a row, closer to the ground.
+Clear a wave and a huge boss invader descends, striped with eight coloured bands in a random order.
+• Only the colour of its lowest band can hurt it. Hit it and that band is blasted away, exposing the next one up.
+• Fire the wrong colour and the boss lurches down a row, closer to the ground.
 • Strip away all eight bands for a bonus and the next wave begins.
 • Every boss comes down a little faster than the last.
 
 TURBO MODE AND COMBOS
-Destroy five invaders of the same color in a row and TURBO lights up.
+Destroy five invaders of the same colour in a row and TURBO lights up.
 • A streak counter under your score shows how close you are.
 • In turbo, chain five more in a row and the whole screen explodes: every invader is destroyed and scored, plus a 25-point bonus.
 • Finish that combo on a boss's lowest band and the entire boss goes down with it.
@@ -57,11 +55,11 @@ WAVES THAT BUILD
 Each wave of 25 invaders speeds up as it goes. The next wave starts calm again, but the invaders arrive in pairs, then threes, fours and fives. Survive long enough and every wave starts faster than the one before.
 
 CHASE A HIGH SCORE
-Primary colors are worth 1 point, mixed colors 2, and white 3. Beating a boss or clearing the screen in turbo adds a bonus on top. If a single invader or the boss reaches the bottom, it's game over. Share your score with a card and QR code, and dare your friends to beat it.
+Primary colours are worth 1 point, mixed colours 2, and white 3. Beating a boss or clearing the screen in turbo adds a bonus on top. If a single invader or the boss reaches the bottom, it's game over. Share your score with a card and QR code, and dare your friends to beat it.
 
 EASY TO PICK UP, HARD TO PUT DOWN
-• Simple one-hand controls: just three multi-touch color buttons
-• A color-mixing guide on screen while you learn
+• Simple one-hand controls: just three multi-touch colour buttons
+• A colour-mixing guide on screen while you learn
 • Crisp 8-bit style pixel art, retro sound effects and original music
 • Play offline, no internet needed
 • Short rounds, perfect for a quick casual game on a break
@@ -69,4 +67,4 @@ EASY TO PICK UP, HARD TO PUT DOWN
 FAIR AND FRIENDLY
 RGB Invaders is free to play with occasional ads, limited to family-friendly content. Enjoying the game? Leave a tip from the tip jar to support development and play ad-free for a month, three months or a whole year. Tips stack, and there are no subscriptions.
 
-If you love retro arcade games, space shooters and color puzzles, download RGB Invaders and see how long you can hold the line!
+If you love retro arcade games, space shooters and colour puzzles, download RGB Invaders and see how long you can hold the line!
