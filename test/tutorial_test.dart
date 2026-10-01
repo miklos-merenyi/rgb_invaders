@@ -69,12 +69,35 @@ void main() {
     for (var i = 0; i < Tutorial.steps.length - 1; i++) {
       expect(tutorial.finished, isFalse);
       _clearField(g);
-      expect(tutorial.update(Tutorial.stepPause / 2), isFalse);
-      expect(tutorial.update(Tutorial.stepPause), isTrue);
+      for (var t = 0.0; tutorial.step == i; t += 0.1) {
+        tutorial.update(0.1);
+        expect(t, lessThan(Tutorial.praisePause + 1));
+      }
     }
     expect(tutorial.finished, isTrue);
     expect(g.phase, GamePhase.playing);
     expect(g.best, 0);
+  });
+
+  test('the boss step ends after three bands with praise', () {
+    final g = Game()..size = const Size(400, 800);
+    final tutorial = Tutorial(g)..begin();
+    while (g.boss == null) {
+      _clearField(g);
+      tutorial.update(Tutorial.stepPause);
+      tutorial.update(Tutorial.stepPause);
+    }
+    for (var shot = 0; g.boss!.alive > Boss.bandCount - Tutorial.bossBands;) {
+      if (g.fire(g.boss!.target)) shot++;
+      g.update(0.05);
+      expect(shot, lessThan(50));
+    }
+    expect(tutorial.update(0.016), isTrue);
+    expect(g.boss, isNull);
+    expect(tutorial.text, "You've got it!");
+    expect(tutorial.update(Tutorial.praisePause / 2), isFalse);
+    expect(tutorial.update(Tutorial.praisePause), isTrue);
+    expect(tutorial.finished, isTrue);
   });
 
   testWidgets('the tutorial opens from the start screen and can be skipped', (

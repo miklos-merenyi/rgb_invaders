@@ -179,7 +179,11 @@ class _GameScreenState extends State<GameScreen>
     _last = elapsed;
     _clock += dt;
     _game.update(dt);
-    if (_tutorial?.update(dt) ?? false) setState(() {});
+    if (_tutorial?.update(dt) ?? false) {
+      // The boss's music ends with it.
+      if (_tutorial!.finished) _sounds.waveMusic();
+      setState(() {});
+    }
     if (_kDemo) _demoTurn();
     _frame.value++;
     if (_game.phase != _shownPhase) {
@@ -365,8 +369,8 @@ class _GameScreenState extends State<GameScreen>
                     _buildOverlay(),
                   if (_tutorial case final tutorial?)
                     tutorial.finished
-                        ? _buildTutorialEnd(tutorial.current)
-                        : _buildTutorialCard(tutorial.current),
+                        ? _buildTutorialEnd(tutorial.text)
+                        : _buildTutorialCard(tutorial.text),
                   Positioned(top: 4, right: 4, child: _buildSoundButtons()),
                 ],
               ),
@@ -528,7 +532,7 @@ class _GameScreenState extends State<GameScreen>
 
   /// The current tutorial step's instructions, above the launcher, out of
   /// the way of the invaders coming in at the top.
-  Widget _buildTutorialCard(TutorialStep step) {
+  Widget _buildTutorialCard(String text) {
     return Positioned(
       bottom: 64,
       left: 16,
@@ -544,7 +548,7 @@ class _GameScreenState extends State<GameScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             _tutorialText(
-              step.text,
+              text,
               const TextStyle(color: Colors.white, fontSize: 16, height: 1.5),
             ),
             TextButton(
@@ -561,7 +565,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   /// The tutorial's closing card, with the way into a real game.
-  Widget _buildTutorialEnd(TutorialStep step) {
+  Widget _buildTutorialEnd(String text) {
     return Container(
       color: Colors.black54,
       alignment: Alignment.center,
@@ -582,7 +586,7 @@ class _GameScreenState extends State<GameScreen>
             ),
             const SizedBox(height: 24),
             _tutorialText(
-              step.text,
+              text,
               const TextStyle(color: Colors.white70, fontSize: 17, height: 1.5),
             ),
             const SizedBox(height: 32),

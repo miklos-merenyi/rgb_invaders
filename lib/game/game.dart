@@ -501,6 +501,19 @@ class Game {
     }
   }
 
+  /// Bursts the whole boss without scoring it and removes it, with no wave
+  /// after it.
+  void dismissBoss() {
+    final b = boss;
+    if (b == null) return;
+    for (var i = 0; i < Boss.bandCount; i++) {
+      explosions.add(
+        Explosion(bossBandRect(b, i).center, b.bands[i], points: 0),
+      );
+    }
+    boss = null;
+  }
+
   void _spawnBoss() {
     _bossPending = false;
     // Every colour once plus one random extra, shuffled until the extra
