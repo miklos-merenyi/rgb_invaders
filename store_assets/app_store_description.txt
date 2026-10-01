@@ -3,7 +3,7 @@ RGB Invaders — App Store listing
 
 SUBTITLE (max 30 chars)
 -----------------------
-Mix colours. Blast invaders.
+Colour Mixing Arcade Shooter
 
 
 PROMOTIONAL TEXT (max 170 chars)
@@ -13,14 +13,14 @@ New: TURBO mode! Destroy 5 invaders of one colour in a row to go turbo, then cha
 
 KEYWORDS (max 100 chars, comma-separated)
 -----------------------------------------
-arcade,retro,colour,color,rgb,mix,reflex,shooter,invaders,boss,pixel,casual,combo,streak,turbo
+color,space,alien,retro,pixel,8bit,neon,reflex,puzzle,brain,casual,offline,boss,classic,shoot,ufo
 
 
 DESCRIPTION (max 4000 chars)
 ----------------------------
 Red, green and blue. That's all you need — and all you get.
 
-RGB Invaders is a fast, colourful arcade game about mixing light. Pixel invaders in seven colours rain down from the top of the screen. Fire an expanding ring of colour to destroy them — but a ring only hits an invader of its own colour. Everything else it passes straight through.
+RGB Invaders is a fast retro arcade shooter with a colour-mixing puzzle twist. Pixel alien invaders in seven colours rain down from space. Fire an expanding ring of colour to destroy them — but a ring only hits an invader of its own colour. Everything else it passes straight through.
 
 MIX YOUR SHOTS
 Tap Red, Green or Blue to fire that colour. Press buttons together to mix:
