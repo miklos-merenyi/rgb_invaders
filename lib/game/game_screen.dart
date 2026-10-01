@@ -3,12 +3,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../services/ad_service.dart';
 import '../services/leaderboard_service.dart';
 import '../services/purchase_service.dart';
 import '../services/sound_service.dart';
+import '../widgets/share_app.dart';
 import '../widgets/tip_jar.dart';
 import 'chord_detector.dart';
 import 'color_pad.dart';
@@ -35,6 +37,12 @@ const _kDemoWave = int.fromEnvironment('DEMO_WAVE', defaultValue: 1);
 /// Opens the tip jar over the demo's final game-over screen
 /// (`--dart-define=DEMO_TIPJAR=true`), for its store screenshot.
 const _kDemoTipJar = bool.fromEnvironment('DEMO_TIPJAR');
+
+/// The app's numeric Apple ID (App Store Connect → App Information → Apple
+/// ID), so "Rate the app" can open the App Store's review page. While it's
+/// empty, iOS asks for the in-app rating prompt instead, which Apple shows at
+/// most three times a year.
+const _kAppStoreId = '';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, this.game});
@@ -402,9 +410,11 @@ class _GameScreenState extends State<GameScreen>
               ),
               const SizedBox(height: 40),
               if (over) _buildShareLink(),
+              _buildRateLink(),
+              _buildShareAppLink(),
               if (LeaderboardService().enabled) _buildLeaderboardLink(),
-              _buildMusicLink(),
               _buildSupportLink(),
+              _buildMusicLink(),
             ],
           ),
         ),
@@ -486,6 +496,52 @@ class _GameScreenState extends State<GameScreen>
     letterSpacing: 1,
   );
 
+  /// Bigger and brighter than [_linkStyle], for the links we most want
+  /// tapped.
+  static const _mainLinkStyle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: Colors.white,
+    decoration: TextDecoration.underline,
+    decorationColor: Colors.white54,
+    letterSpacing: 1,
+  );
+
+  Widget _buildRateLink() {
+    return GestureDetector(
+      onTap: _rateApp,
+      child: const Padding(
+        padding: EdgeInsets.all(10),
+        child: Text('⭐ Rate the app', style: _mainLinkStyle),
+      ),
+    );
+  }
+
+  Widget _buildShareAppLink() {
+    return GestureDetector(
+      onTap: () => showShareApp(context),
+      child: const Padding(
+        padding: EdgeInsets.all(10),
+        child: Text('📲 Share the app', style: _mainLinkStyle),
+      ),
+    );
+  }
+
+  /// Opens the store's review page; on iOS without [_kAppStoreId], the
+  /// in-app rating prompt.
+  Future<void> _rateApp() async {
+    final review = InAppReview.instance;
+    try {
+      if (Platform.isIOS && _kAppStoreId.isEmpty) {
+        if (await review.isAvailable()) await review.requestReview();
+      } else {
+        await review.openStoreListing(appStoreId: _kAppStoreId);
+      }
+    } catch (e) {
+      debugPrint('[GameScreen] rating failed: $e');
+    }
+  }
+
   Widget _buildLeaderboardLink() {
     return GestureDetector(
       onTap: _openLeaderboard,
@@ -565,8 +621,8 @@ class _GameScreenState extends State<GameScreen>
       builder: (context) => GestureDetector(
         onTap: () => _shareScore(context),
         child: const Padding(
-          padding: EdgeInsets.all(8),
-          child: Text('📤 Share score', style: _linkStyle),
+          padding: EdgeInsets.all(10),
+          child: Text('📤 Share score', style: _mainLinkStyle),
         ),
       ),
     );
@@ -614,18 +670,14 @@ class _GameScreenState extends State<GameScreen>
       builder: (context, _) => GestureDetector(
         onTap: () => showTipJar(context),
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           child: Text(
             ps.adsRemoved
                 ? adsFreeLabel(context, ps.adsFreeUntil!)
                 : '☕ Support the dev & remove ads',
-            style: TextStyle(
-              fontSize: 13,
-              color: ps.adsRemoved ? Colors.greenAccent : Colors.white54,
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.white24,
-              letterSpacing: 1,
-            ),
+            style: ps.adsRemoved
+                ? _mainLinkStyle.copyWith(color: Colors.greenAccent)
+                : _mainLinkStyle,
           ),
         ),
       ),
