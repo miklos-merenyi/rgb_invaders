@@ -57,6 +57,13 @@ class Tutorial {
         ..dropMonster(GameColors.red, x: 0.7),
     ),
     TutorialStep(
+      'A ring stops at the first invader it hits,\n'
+      'so two GREEN ones take two shots.',
+      (g) => g
+        ..dropMonster(GameColors.green, x: 0.3)
+        ..dropMonster(GameColors.green, x: 0.7),
+    ),
+    TutorialStep(
       'Press RED and GREEN together to mix YELLOW.',
       (g) => g.dropMonster(GameColors.red | GameColors.green),
     ),

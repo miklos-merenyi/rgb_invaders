@@ -39,6 +39,22 @@ void main() {
       expect(g.boss!.y, Game.bossEntryY);
     });
 
+    test('one ring destroys only one of two same-coloured invaders', () {
+      final g = Game()
+        ..size = const Size(400, 800)
+        ..startPractice()
+        ..dropMonster(GameColors.green, x: 0.3)
+        ..dropMonster(GameColors.green, x: 0.7);
+      for (final m in g.monsters) {
+        m.y = 0.4;
+      }
+      expect(g.fire(GameColors.green), isTrue);
+      while (g.pulse != null) {
+        g.update(0.016);
+      }
+      expect(g.monsters, hasLength(1));
+    });
+
     test('nothing spawns but what is dropped in', () {
       final g = Game()
         ..size = const Size(400, 800)
