@@ -18,6 +18,7 @@ import 'demo_player.dart';
 import 'game.dart';
 import 'game_painter.dart';
 import 'share_card.dart';
+import 'tutorial.dart';
 
 /// Build with `--dart-define=DEMO=true` to make the game start and play
 /// itself for a while, e.g. for store screenshots on a simulator. Off in
@@ -85,6 +86,9 @@ class _GameScreenState extends State<GameScreen>
   /// game-over screen can't be tapped away just as an ad appears.
   bool _overlayReady = true;
 
+  /// The tutorial while it runs, in a practice round.
+  Tutorial? _tutorial;
+
   /// Turns near-simultaneous button presses into one mixed colour.
   late final ChordDetector _chords = ChordDetector(onChord: _fire);
 
@@ -102,7 +106,7 @@ class _GameScreenState extends State<GameScreen>
       );
       Future<void>.delayed(const Duration(seconds: 3), () {
         _demoClock.start();
-        _onOverlayTap();
+        _startGame();
       });
     }
   }
@@ -175,6 +179,7 @@ class _GameScreenState extends State<GameScreen>
     _last = elapsed;
     _clock += dt;
     _game.update(dt);
+    if (_tutorial?.update(dt) ?? false) setState(() {});
     if (_kDemo) _demoTurn();
     _frame.value++;
     if (_game.phase != _shownPhase) {
@@ -203,7 +208,7 @@ class _GameScreenState extends State<GameScreen>
         return;
       }
       await Future<void>.delayed(const Duration(seconds: 4));
-      if (mounted) _onOverlayTap();
+      if (mounted) _startGame();
       return;
     }
     setState(() => _overlayReady = false);
@@ -299,13 +304,32 @@ class _GameScreenState extends State<GameScreen>
     setState(() => _chords.up(e.pointer));
   }
 
-  void _onOverlayTap() {
+  void _startGame() {
     if (!_overlayReady) return;
+    _tutorial = null;
     _chords.reset();
     _game.start();
     if (_kDemo) _game.wave = _kDemoWave;
     _sounds.start();
     _sounds.newGameMusic();
+    setState(() => _shownPhase = _game.phase);
+  }
+
+  void _startTutorial() {
+    if (!_overlayReady) return;
+    _chords.reset();
+    _tutorial = Tutorial(_game)..begin();
+    _sounds.start();
+    _sounds.newGameMusic();
+    setState(() => _shownPhase = _game.phase);
+  }
+
+  /// Leaves the tutorial for the start screen.
+  void _endTutorial() {
+    _tutorial = null;
+    _chords.reset();
+    _game.stop();
+    _sounds.stopMusic();
     setState(() => _shownPhase = _game.phase);
   }
 
@@ -339,6 +363,10 @@ class _GameScreenState extends State<GameScreen>
                   if (_shownPhase == GamePhase.ready ||
                       _shownPhase == GamePhase.over && _overlayReady)
                     _buildOverlay(),
+                  if (_tutorial case final tutorial?)
+                    tutorial.finished
+                        ? _buildTutorialEnd(tutorial.current)
+                        : _buildTutorialCard(tutorial.current),
                   Positioned(top: 4, right: 4, child: _buildSoundButtons()),
                 ],
               ),
@@ -359,64 +387,209 @@ class _GameScreenState extends State<GameScreen>
       letterSpacing: 4,
     );
     const body = TextStyle(color: Colors.white70, fontSize: 17, height: 1.5);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _onOverlayTap,
-      child: Container(
-        color: Colors.black54,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(32),
-        // Scale down on short screens rather than overflow.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              over
-                  ? _rainbowText('GAME OVER', title)
-                  : _rainbowText('RGB INVADERS', title, colors: _titleColors),
-              const SizedBox(height: 24),
-              if (over) ...[
-                Text(
-                  'Score: ${_game.score}',
-                  style: body.copyWith(color: Colors.white, fontSize: 24),
-                ),
-                Text('Best: ${_game.best}', style: body),
-              ] else
-                const Text(
-                  'Tap a colour button to fire a circle.\n'
-                  'Press several buttons together to mix colours:\n'
-                  'R+G = yellow, G+B = cyan, R+B = magenta,\n'
-                  'R+G+B = white.\n'
-                  'A circle only destroys a monster of its own colour.\n'
-                  'Mixed colours score more: 1 point per button.\n'
-                  'Every 25 monsters a new wave starts slower again,\n'
-                  'but they come in pairs, then threes…\n'
-                  'Between waves a boss descends: shoot its\n'
-                  'lowest colour to peel it away, band by band.\n'
-                  'Hit 5 of one colour in a row for TURBO,\n'
-                  'then 5 more in a row to clear the screen!',
-                  textAlign: TextAlign.center,
-                  style: body,
-                ),
-              const SizedBox(height: 32),
-              const Text(
-                'Tap to play',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w600,
-                ),
+    return Container(
+      color: Colors.black54,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(32),
+      // Scale down on short screens rather than overflow.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            over
+                ? _rainbowText('GAME OVER', title)
+                : _rainbowText('RGB INVADERS', title, colors: _titleColors),
+            const SizedBox(height: 24),
+            if (over) ...[
+              Text(
+                'Score: ${_game.score}',
+                style: body.copyWith(color: Colors.white, fontSize: 24),
               ),
-              const SizedBox(height: 40),
-              if (over) _buildShareLink(),
-              _buildRateLink(),
-              _buildShareAppLink(),
-              if (LeaderboardService().enabled) _buildLeaderboardLink(),
-              _buildSupportLink(),
-              _buildMusicLink(),
-            ],
+              Text('Best: ${_game.best}', style: body),
+            ] else
+              _tutorialText(
+                'Mix RED, GREEN and BLUE\nto blast the invaders!',
+                body.copyWith(color: Colors.white, fontSize: 20),
+              ),
+            const SizedBox(height: 32),
+            _buildMenuButton(
+              over ? 'Play Again' : 'Start Game',
+              _startGame,
+              primary: true,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMenuButton('Tutorial', _startTutorial, width: 124),
+                const SizedBox(width: 12),
+                _buildMenuButton('Instructions', _showInstructions, width: 124),
+              ],
+            ),
+            const SizedBox(height: 40),
+            if (over) _buildShareLink(),
+            _buildRateLink(),
+            _buildShareAppLink(),
+            if (LeaderboardService().enabled) _buildLeaderboardLink(),
+            _buildSupportLink(),
+            _buildMusicLink(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton(
+    String label,
+    VoidCallback onTap, {
+    bool primary = false,
+    double width = 260,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: primary ? Colors.white : Colors.white.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(36),
+          border: Border.all(
+            color: primary ? Colors.white : Colors.white38,
+            width: 1.5,
           ),
+          boxShadow: primary
+              ? [
+                  BoxShadow(
+                    color: GameColors.of(
+                      GameColors.blue,
+                    ).withValues(alpha: 0.6),
+                    blurRadius: 18,
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: primary ? Colors.black : Colors.white,
+            fontSize: primary ? 24 : (width < 200 ? 16 : 20),
+            fontWeight: primary ? FontWeight.w800 : FontWeight.w600,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Colour names in tutorial text, by their mask.
+  static const _colourWords = {
+    'RED': GameColors.red,
+    'GREEN': GameColors.green,
+    'YELLOW': GameColors.red | GameColors.green,
+    'BLUE': GameColors.blue,
+    'MAGENTA': GameColors.red | GameColors.blue,
+    'CYAN': GameColors.green | GameColors.blue,
+    'WHITE': 7,
+  };
+
+  /// [text] with its capitalised colour names in bold, in their colour.
+  Widget _tutorialText(
+    String text,
+    TextStyle style, {
+    TextAlign textAlign = TextAlign.center,
+  }) {
+    final spans = <TextSpan>[];
+    text.splitMapJoin(
+      RegExp(r'\b[A-Z]{3,}\b'),
+      onMatch: (m) {
+        final mask = _colourWords[m[0]];
+        spans.add(
+          TextSpan(
+            text: m[0],
+            style: mask == null
+                ? style.copyWith(fontWeight: FontWeight.w800)
+                : style.copyWith(
+                    color: GameColors.of(mask),
+                    fontWeight: FontWeight.w800,
+                  ),
+          ),
+        );
+        return '';
+      },
+      onNonMatch: (t) {
+        spans.add(TextSpan(text: t, style: style));
+        return '';
+      },
+    );
+    return Text.rich(TextSpan(children: spans), textAlign: textAlign);
+  }
+
+  /// The current tutorial step's instructions, above the launcher, out of
+  /// the way of the invaders coming in at the top.
+  Widget _buildTutorialCard(TutorialStep step) {
+    return Positioned(
+      bottom: 64,
+      left: 16,
+      right: 16,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+        decoration: BoxDecoration(
+          color: const Color(0xCC1A1A2A),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _tutorialText(
+              step.text,
+              const TextStyle(color: Colors.white, fontSize: 16, height: 1.5),
+            ),
+            TextButton(
+              onPressed: _endTutorial,
+              child: const Text(
+                'Skip tutorial',
+                style: TextStyle(fontSize: 13, color: Colors.white38),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The tutorial's closing card, with the way into a real game.
+  Widget _buildTutorialEnd(TutorialStep step) {
+    return Container(
+      color: Colors.black54,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(32),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _rainbowText(
+              "YOU'RE READY!",
+              const TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 3,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _tutorialText(
+              step.text,
+              const TextStyle(color: Colors.white70, fontSize: 17, height: 1.5),
+            ),
+            const SizedBox(height: 32),
+            _buildMenuButton('Start Game', _startGame, primary: true),
+            const SizedBox(height: 12),
+            _buildMenuButton('Back to Menu', _endTutorial),
+          ],
         ),
       ),
     );
@@ -558,6 +731,94 @@ class _GameScreenState extends State<GameScreen>
       child: const Padding(
         padding: EdgeInsets.all(8),
         child: Text('🎵 About the music', style: _linkStyle),
+      ),
+    );
+  }
+
+  /// The rules in full, for reading at leisure.
+  Future<void> _showInstructions() {
+    const body = TextStyle(color: Colors.white60, height: 1.5, fontSize: 14);
+    const heading = TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.w700,
+      height: 1.5,
+    );
+    const sections = [
+      (
+        'Fire',
+        'Tap RED, GREEN or BLUE to fire a ring of that colour. A ring only '
+            'destroys invaders of its own colour and passes through the rest. '
+            'Only one ring flies at a time.',
+      ),
+      (
+        'Mix colours',
+        'Press buttons together to mix:\n'
+            'RED + GREEN = YELLOW\n'
+            'GREEN + BLUE = CYAN\n'
+            'RED + BLUE = MAGENTA\n'
+            'All three = WHITE',
+      ),
+      (
+        'Score',
+        'Each invader scores 1 point per button it takes: 1 for primary '
+            'colours, 2 for mixed ones, 3 for WHITE.',
+      ),
+      (
+        'Waves',
+        'Every ${Game.waveLength} invaders a new wave begins. It starts '
+            'slower again, but the invaders come in pairs, then threes, '
+            'fours and fives.',
+      ),
+      (
+        'Bosses',
+        'Between waves a boss comes down. Only its lowest colour hurts it: '
+            'shoot it away band by band for a +${Game.bossBonus} bonus. A '
+            'wrong colour pushes it closer.',
+      ),
+      (
+        'Turbo',
+        'Hit ${Game.streakLength} of one colour in a row for TURBO, then '
+            '${Game.streakLength} more in a row to clear the whole screen '
+            'for a +${Game.turboBonus} bonus. A ring that hits nothing '
+            'breaks the streak.',
+      ),
+      (
+        'Game over',
+        'If a single invader, or the boss, reaches the bottom, the game '
+            'is over.',
+      ),
+    ];
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        scrollable: true,
+        backgroundColor: const Color(0xFF1A1A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'How to play',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (title, text) in sections) ...[
+              Text(title, style: heading),
+              _tutorialText(text, body, textAlign: TextAlign.start),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK', style: TextStyle(color: Colors.white70)),
+          ),
+        ],
       ),
     );
   }

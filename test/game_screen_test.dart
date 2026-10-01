@@ -12,7 +12,7 @@ void main() {
     final game = Game()..spawning = false;
     await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));
     await t.pump(const Duration(milliseconds: 16));
-    await t.tap(find.text('Tap to play'));
+    await t.tap(find.text('Start Game'));
     game.spawning = false;
     await t.pump(const Duration(milliseconds: 16));
 
@@ -34,7 +34,7 @@ void main() {
     final game = Game()..spawning = false;
     await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));
     await t.pump(const Duration(milliseconds: 16));
-    await t.tap(find.text('Tap to play'));
+    await t.tap(find.text('Start Game'));
     game.spawning = false;
     game.monsters.add(
       Monster(mask: GameColors.red, baseX: 0.5, speed: 0, phase: 0)..y = 1,

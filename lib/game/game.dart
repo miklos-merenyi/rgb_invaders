@@ -169,6 +169,11 @@ class Game {
   /// Whether new monsters appear; tests turn this off.
   bool spawning = true;
 
+  /// True in the tutorial: only the invaders and bosses it drops in appear,
+  /// and reaching the bottom sends them back to the top instead of ending
+  /// the game.
+  bool practice = false;
+
   /// Called with the colour when a circle destroys a monster.
   void Function(int mask)? onHit;
 
@@ -347,7 +352,56 @@ class Game {
     turboTime = double.infinity;
     clearTime = double.infinity;
     _spawnTimer = 1.2;
+    practice = false;
     phase = GamePhase.playing;
+  }
+
+  /// Starts a [practice] round with an empty field, for the tutorial to
+  /// fill with [dropMonster] and [dropBoss].
+  void startPractice() {
+    start();
+    practice = true;
+    waveTime = double.infinity;
+  }
+
+  /// Ends a round without a game over, back to the start screen.
+  void stop() {
+    monsters.clear();
+    explosions.clear();
+    pulse = null;
+    boss = null;
+    _bossPending = false;
+    _endStreak();
+    turbo = false;
+    practice = false;
+    phase = GamePhase.ready;
+  }
+
+  /// Drops one invader of [mask] in from the top at [x], a fraction of the
+  /// play-field width.
+  void dropMonster(int mask, {double x = 0.5}) {
+    monsters.add(
+      Monster(mask: mask, baseX: x, speed: startSpeed, phase: 0)
+        ..y = size.isEmpty ? 0 : -monsterRadius / size.height,
+    );
+  }
+
+  /// Brings down a boss with [bands] (top to bottom) from above the top.
+  Boss dropBoss(
+    List<int> bands, {
+    double speed = bossStartSpeed,
+    int shape = 0,
+  }) {
+    final b = Boss(
+      bands: bands,
+      speed: speed,
+      shape: shape,
+      y: size.isEmpty ? 0 : -8 * bossPixel / size.height,
+    );
+    boss = b;
+    bossTime = 0;
+    onBoss?.call();
+    return b;
   }
 
   /// Fires a circle of [mask] colour. Returns false if one is already active.
@@ -378,7 +432,7 @@ class Game {
       // The boss waits for the rest of its wave to be cleared, and after a
       // turbo clear until its banner has gone.
       if (monsters.isEmpty && clearTime >= bossAfterClearDelay) _spawnBoss();
-    } else if (boss == null) {
+    } else if (boss == null && !practice) {
       _spawnTimer -= dt;
       if (spawning && _spawnTimer <= 0) {
         _spawnGroup();
@@ -400,8 +454,12 @@ class Game {
           ? min(b.y + bossEntrySpeed * dt, bossEntryY)
           : b.y + b.speed * dt + push;
       if (bossBandRect(b, b.alive - 1).bottom >= size.height) {
-        _gameOver();
-        return;
+        if (!practice) {
+          _gameOver();
+          return;
+        }
+        b.y = bossEntryY;
+        b.push = 0;
       }
     }
 
@@ -410,8 +468,11 @@ class Game {
       m.age += dt;
       m.y += m.speed * dt;
       if (m.y * size.height + r >= size.height) {
-        _gameOver();
-        return;
+        if (!practice) {
+          _gameOver();
+          return;
+        }
+        m.y = -r / size.height;
       }
     }
 
@@ -451,14 +512,7 @@ class Game {
     do {
       bands.shuffle(_random);
     } while (_hasNeighbourTwins(bands));
-    boss = Boss(
-      bands: bands,
-      speed: bossSpeedFor(wave),
-      shape: (wave - 1) % 3,
-      y: -8 * bossPixel / size.height,
-    );
-    bossTime = 0;
-    onBoss?.call();
+    dropBoss(bands, speed: bossSpeedFor(wave), shape: (wave - 1) % 3);
   }
 
   static bool _hasNeighbourTwins(List<int> bands) {
@@ -497,7 +551,8 @@ class Game {
     }
     wave++;
     _waveSpawns = 0;
-    waveTime = 0;
+    // No "WAVE n" banner in practice, where no wave follows.
+    waveTime = practice ? double.infinity : 0;
     _spawnTimer = waveBreak;
     onWave?.call(wave);
   }
