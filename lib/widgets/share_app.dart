@@ -44,7 +44,8 @@ class _ShareAppDialogState extends State<ShareAppDialog> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Let a friend scan this to get RGB Invaders.',
+              'Let a friend scan this to get RGB Invaders.\n'
+              'Works on iPhone, iPad and Android.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
