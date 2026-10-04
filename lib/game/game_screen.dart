@@ -431,11 +431,15 @@ class _GameScreenState extends State<GameScreen>
                 _buildMenuButton('Instructions', _showInstructions, width: 124),
               ],
             ),
-            const SizedBox(height: 40),
+            if (LeaderboardService().enabled) ...[
+              const SizedBox(height: 8),
+              _buildLeaderboardLink(),
+              const SizedBox(height: 24),
+            ] else
+              const SizedBox(height: 40),
             if (over) _buildShareLink(),
             _buildRateLink(),
             _buildShareAppLink(),
-            if (LeaderboardService().enabled) _buildLeaderboardLink(),
             _buildSupportLink(),
             _buildMusicLink(),
           ],
@@ -723,8 +727,8 @@ class _GameScreenState extends State<GameScreen>
     return GestureDetector(
       onTap: _openLeaderboard,
       child: const Padding(
-        padding: EdgeInsets.all(8),
-        child: Text('🏆 Leaderboard', style: _linkStyle),
+        padding: EdgeInsets.all(10),
+        child: Text('🏆 Leaderboard', style: _mainLinkStyle),
       ),
     );
   }
