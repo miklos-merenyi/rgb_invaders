@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -224,8 +225,12 @@ class GamePainter extends CustomPainter {
           colors: [for (final c in rainbow) c.withValues(alpha: (1 - k) * 0.9)],
           transform: GradientRotation(t * 6 + i),
         ).createShader(rect);
-      // A path, not drawCircle; see [_paintPulse].
-      canvas.drawPath(Path()..addOval(rect), paint);
+      // Triangles, not a stroked circle; see [_ring].
+      canvas.drawVertices(
+        _ring(game.origin, radius, paint.strokeWidth),
+        BlendMode.srcOver,
+        paint,
+      );
     }
   }
 
@@ -367,26 +372,44 @@ class GamePainter extends CustomPainter {
       p.radius,
       Paint()..color = color.withValues(alpha: 0.07),
     );
-    // The rings are paths, not drawCircle: Impeller draws stroked circles
-    // with a per-pixel distance that overflows on low-precision GPUs (seen
-    // on a Moto G50), so big rings lost their sharp edge.
-    final ring = Path()
-      ..addOval(Rect.fromCircle(center: game.origin, radius: p.radius));
     canvas.drawPath(
-      ring,
+      Path()..addOval(Rect.fromCircle(center: game.origin, radius: p.radius)),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 10
         ..color = color.withValues(alpha: 0.35)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
-    canvas.drawPath(
-      ring,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4
-        ..color = color,
+    canvas.drawVertices(
+      _ring(game.origin, p.radius, 4),
+      BlendMode.srcOver,
+      Paint()..color = color,
     );
+  }
+
+  /// A ring of [width] around [radius], as a strip of triangles.
+  ///
+  /// Not a stroked circle or oval path: Impeller draws those with a
+  /// per-pixel distance that overflows on low-precision GPUs, so big rings
+  /// lose their sharp edge or vanish (seen on a Moto G50 and a Lenovo Tab
+  /// M10). Plain triangles look the same on every GPU.
+  static ui.Vertices _ring(Offset center, double radius, double width) {
+    final inner = max(0.0, radius - width / 2);
+    final outer = radius + width / 2;
+    // Enough segments that the straight edges stay within a quarter pixel
+    // of the true circle.
+    final n = outer < 1
+        ? 3
+        : (pi / acos(max(-1.0, 1 - 0.25 / outer))).ceil().clamp(32, 360);
+    final points = <Offset>[];
+    for (var i = 0; i <= n; i++) {
+      final a = 2 * pi * i / n;
+      final dir = Offset(cos(a), sin(a));
+      points
+        ..add(center + dir * outer)
+        ..add(center + dir * inner);
+    }
+    return ui.Vertices(VertexMode.triangleStrip, points);
   }
 
   void _paintExplosion(Canvas canvas, Explosion e) {

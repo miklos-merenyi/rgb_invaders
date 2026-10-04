@@ -634,17 +634,20 @@ class Game {
   void _updatePulse(double dt) {
     final p = pulse;
     if (p == null) return;
+    final from = p.radius;
     p.radius += pulseSpeed * dt;
 
     // The circle's edge touches a monster when the monster's centre is within
-    // one monster-radius of the ring. Pick the closest matching one.
+    // one monster-radius of the ring. Check everything the edge swept over
+    // since the last frame, so a slow frame can't jump it past a monster.
+    // Pick the closest matching one.
     final r = monsterRadius;
     Monster? hit;
     var hitDist = double.infinity;
     for (final m in monsters) {
       if (m.mask != p.mask) continue;
       final d = (monsterPosition(m) - origin).distance;
-      if ((d - p.radius).abs() <= r && d < hitDist) {
+      if (d >= from - r && d <= p.radius + r && d < hitDist) {
         hit = m;
         hitDist = d;
       }

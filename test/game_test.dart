@@ -65,6 +65,26 @@ void main() {
     expect(hits, [GameColors.red | GameColors.green]);
   });
 
+  test('circle hits a monster it jumps over between slow frames', () {
+    // On a tall tablet at 20 fps the ring grows 83 px a frame, more than a
+    // monster is wide: it goes from 41.6 px short of this one to 41.6 px
+    // past it without ever touching it on a frame.
+    final g = Game(random: Random(1))
+      ..size = const Size(800, 1280)
+      ..start()
+      ..spawning = false;
+    g.monsters.add(_monsterAt(g, GameColors.red, 1 - 624 / 1280));
+    g.fire(GameColors.red);
+    for (var i = 0; i < 60 && g.pulse != null; i++) {
+      g.update(0.05);
+      for (final m in g.monsters) {
+        m.age = 0; // keep it still
+      }
+    }
+    expect(g.monsters, isEmpty);
+    expect(g.score, 1);
+  });
+
   test('circle passes through other colours and ends at the top', () {
     final g = _newGame();
     var misses = 0;
