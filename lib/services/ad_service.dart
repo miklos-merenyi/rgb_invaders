@@ -19,6 +19,12 @@ const _kTestIosInterstitialId = 'ca-app-pub-3940256099942544/4411468910';
 const _kReleaseAndroidInterstitialId = '';
 const _kReleaseIosInterstitialId = '';
 
+/// The AdMob SDK only runs on phones and tablets, so the Mac app has no ads.
+bool get kHasAds => switch (defaultTargetPlatform) {
+  TargetPlatform.android || TargetPlatform.iOS => true,
+  _ => false,
+};
+
 String get _interstitialAdUnitId {
   if (kDebugMode) {
     return Platform.isIOS
@@ -48,7 +54,7 @@ class AdService {
 
   /// Call once from main().
   Future<void> init() async {
-    if (_interstitialAdUnitId.isEmpty) return;
+    if (!kHasAds || _interstitialAdUnitId.isEmpty) return;
     // Cap ad content to "G" and tag requests as child-directed, as rigobert
     // does: its store review rejected ads that exceeded the app's rating.
     await MobileAds.instance.updateRequestConfiguration(

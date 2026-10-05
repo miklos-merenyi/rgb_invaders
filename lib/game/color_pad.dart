@@ -13,6 +13,7 @@ class ColorPad extends StatelessWidget {
     required this.pressed,
     required this.litColor,
     required this.ready,
+    this.keyLabel,
   });
 
   final int mask;
@@ -21,6 +22,9 @@ class ColorPad extends StatelessWidget {
 
   /// False while a circle is already on screen; the pad dims slightly.
   final bool ready;
+
+  /// The keyboard key that presses this pad, written on its face.
+  final String? keyLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +36,25 @@ class ColorPad extends StatelessWidget {
         duration: const Duration(milliseconds: 120),
         child: CustomPaint(
           painter: _PadPainter(base: GameColors.of(mask), lit: litColor, t: t),
-          child: const SizedBox.expand(),
+          child: keyLabel == null
+              ? const SizedBox.expand()
+              : Center(
+                  // Rides down with the face as it's pressed.
+                  child: Transform.translate(
+                    offset: Offset(0, _PadPainter.depth * (t - 0.5)),
+                    child: Text(
+                      keyLabel!,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.55 + 0.4 * t),
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        shadows: const [
+                          Shadow(color: Colors.black54, blurRadius: 4),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -48,10 +70,12 @@ class _PadPainter extends CustomPainter {
   /// 0 = raised, 1 = fully pressed.
   final double t;
 
+  /// How far the face travels when pressed.
+  static const depth = 5.0;
+
   @override
   void paint(Canvas canvas, Size size) {
     const inset = 8.0;
-    const depth = 5.0;
     final press = depth * t;
     final face = Rect.fromLTWH(
       inset,

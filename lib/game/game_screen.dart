@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -17,6 +18,7 @@ import 'color_pad.dart';
 import 'demo_player.dart';
 import 'game.dart';
 import 'game_painter.dart';
+import 'keys.dart';
 import 'share_card.dart';
 import 'tutorial.dart';
 
@@ -97,6 +99,7 @@ class _GameScreenState extends State<GameScreen>
     super.initState();
     _game.best = max(_game.best, LeaderboardService().best);
     _ticker = createTicker(_tick)..start();
+    HardwareKeyboard.instance.addHandler(_onKey);
     if (_kDemo) {
       // Wall-clock time of the first frame, to line up the logged sounds
       // (see SoundService) with a screen recording.
@@ -237,7 +240,8 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  String get _platformGames => Platform.isIOS ? 'Game Center' : 'Play Games';
+  String get _platformGames =>
+      Platform.isIOS || Platform.isMacOS ? 'Game Center' : 'Play Games';
 
   /// Offers sign-in so [score] (and later ones) go on the global leaderboard.
   Future<void> _promptLeaderboard(int score) async {
@@ -308,6 +312,30 @@ class _GameScreenState extends State<GameScreen>
     setState(() => _chords.up(e.pointer));
   }
 
+  /// Pointer ids for held keys, below the demo player's (-1, -2, -4) so the
+  /// two never clash.
+  static int _keyPointer(int mask) => -100 - mask;
+
+  /// Presses and releases colour buttons from [kColourKeys]. Keys go through
+  /// the chord detector like fingers, so J and K together fire YELLOW.
+  bool _onKey(KeyEvent e) {
+    final mask = kColourKeys[e.logicalKey];
+    if (mask == null) return false;
+    switch (e) {
+      case KeyDownEvent():
+        // Leave the keys alone while a dialog is open over the game.
+        if (!(ModalRoute.of(context)?.isCurrent ?? true)) return false;
+        if (_game.phase == GamePhase.playing) {
+          setState(() => _chords.down(_keyPointer(mask), mask));
+        }
+      case KeyUpEvent():
+        setState(() => _chords.up(_keyPointer(mask)));
+      case KeyRepeatEvent():
+      // Holding a key down fires once, like holding a finger on a pad.
+    }
+    return true;
+  }
+
   void _startGame() {
     if (!_overlayReady) return;
     _tutorial = null;
@@ -339,6 +367,7 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
     _ticker.dispose();
     _chords.dispose();
     _frame.dispose();
@@ -708,12 +737,12 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  /// Opens the store's review page; on iOS without [_kAppStoreId], the
-  /// in-app rating prompt.
+  /// Opens the store's review page; on iOS and macOS without
+  /// [_kAppStoreId], the in-app rating prompt.
   Future<void> _rateApp() async {
     final review = InAppReview.instance;
     try {
-      if (Platform.isIOS && _kAppStoreId.isEmpty) {
+      if ((Platform.isIOS || Platform.isMacOS) && _kAppStoreId.isEmpty) {
         if (await review.isAvailable()) await review.requestReview();
       } else {
         await review.openStoreListing(appStoreId: _kAppStoreId);
@@ -751,16 +780,17 @@ class _GameScreenState extends State<GameScreen>
       fontWeight: FontWeight.w700,
       height: 1.5,
     );
-    const sections = [
+    final sections = [
       (
         'Fire',
-        'Tap RED, GREEN or BLUE to fire a ring of that colour. A ring only '
+        '${isMac ? 'Press J, K or L for' : 'Tap'} RED, GREEN or BLUE to '
+            'fire a ring of that colour. A ring only '
             'destroys invaders of its own colour and passes through the rest. '
             'Only one ring flies at a time.',
       ),
       (
         'Mix colours',
-        'Press buttons together to mix:\n'
+        'Press ${isMac ? 'keys' : 'buttons'} together to mix:\n'
             'RED + GREEN = YELLOW\n'
             'GREEN + BLUE = CYAN\n'
             'RED + BLUE = MAGENTA\n'
@@ -943,7 +973,9 @@ class _GameScreenState extends State<GameScreen>
           child: Text(
             ps.adsRemoved
                 ? adsFreeLabel(context, ps.adsFreeUntil!)
-                : '☕ Support the dev & remove ads',
+                : kHasAds
+                ? '☕ Support the dev & remove ads'
+                : '☕ Support the dev',
             style: ps.adsRemoved
                 ? _mainLinkStyle.copyWith(color: Colors.greenAccent)
                 : _mainLinkStyle,
@@ -982,6 +1014,7 @@ class _GameScreenState extends State<GameScreen>
                         pressed: _chords.isHeld(mask),
                         litColor: litColor,
                         ready: _game.canFire,
+                        keyLabel: isMac ? kKeyLabels[mask] : null,
                       ),
                     ),
                   ),

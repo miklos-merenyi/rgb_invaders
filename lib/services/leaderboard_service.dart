@@ -5,7 +5,8 @@ import 'package:games_services/games_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Leaderboard IDs ───────────────────────────────────────────────────────────
-// One global leaderboard, via Game Center on iOS and Play Games on Android.
+// One global leaderboard, via Game Center on iOS and macOS and Play Games on
+// Android.
 // The Play Games project ID lives in
 // android/app/src/main/res/values/games-ids.xml. While the ID for the current
 // platform is empty, leaderboards are switched off and never touch the SDK.
@@ -13,8 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _kIosLeaderboardId = 'com.mermik.rgbinvaders.highscores';
 const _kAndroidLeaderboardId = 'CgkI09qroLsNEAIQAA';
 
+final _gameCenter = Platform.isIOS || Platform.isMacOS;
+
 String get _leaderboardId =>
-    Platform.isIOS ? _kIosLeaderboardId : _kAndroidLeaderboardId;
+    _gameCenter ? _kIosLeaderboardId : _kAndroidLeaderboardId;
 
 /// Scores below this are not submitted, and don't trigger the sign-in prompt.
 const kLeaderboardMinScore = 20;
@@ -71,9 +74,9 @@ class LeaderboardService extends ChangeNotifier {
   /// Signs in without the player asking:
   /// - Picks up an existing session first. Play Games signs most Android
   ///   players in by itself at launch, and that shows no UI.
-  /// - iOS always authenticates with Game Center, as Apple recommends. For a
-  ///   signed-in player that's just the "Welcome back" banner, and Game
-  ///   Center stops asking players who keep cancelling.
+  /// - iOS and macOS always authenticate with Game Center, as Apple
+  ///   recommends. For a signed-in player that's just the "Welcome back"
+  ///   banner, and Game Center stops asking players who keep cancelling.
   /// - Android only calls signIn() for a player who signed in before, since
   ///   otherwise it would show the account picker on every launch.
   /// Once signed in, posts the saved best.
@@ -81,7 +84,7 @@ class LeaderboardService extends ChangeNotifier {
     try {
       if (await GamesServices.isSignedIn) {
         await _markSignedIn();
-      } else if (Platform.isIOS || _hasSignedIn) {
+      } else if (_gameCenter || _hasSignedIn) {
         await GamesServices.signIn();
         await _markSignedIn();
       }

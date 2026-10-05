@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/ad_service.dart';
 import '../services/purchase_service.dart';
 
 Future<void> showTipJar(BuildContext context) => showDialog<void>(
@@ -14,10 +15,12 @@ class TipJarDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ps = PurchaseService();
+    // Without ads (the Mac app), a tip just stops these popups.
+    final free = kHasAds ? 'ad-free' : 'without popups';
     final tips = [
-      (kProductTipS, '☕', 'Small tip', '1 month ad-free'),
-      (kProductTipM, '🎩', 'Medium tip', '3 months ad-free'),
-      (kProductTipL, '👑', 'Royal tip', '1 year ad-free'),
+      (kProductTipS, '☕', 'Small tip', '1 month $free'),
+      (kProductTipM, '🎩', 'Medium tip', '3 months $free'),
+      (kProductTipL, '👑', 'Royal tip', '1 year $free'),
     ];
 
     return Dialog(
@@ -42,11 +45,15 @@ class TipJarDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'RGB Invaders is free to play, with an ad every few games. '
-                'A tip removes ads for a while and stops these popups too.',
+              Text(
+                kHasAds
+                    ? 'RGB Invaders is free to play, with an ad every few '
+                          'games. A tip removes ads for a while and stops '
+                          'these popups too.'
+                    : 'RGB Invaders is free to play. A tip keeps these '
+                          'popups away for a while.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.white60,
                   height: 1.6,
@@ -79,12 +86,12 @@ class TipJarDialog extends StatelessWidget {
                         },
                 ),
               const SizedBox(height: 4),
-              const Text(
-                'Ad-free time is tied to this device only. It can\'t be '
+              Text(
+                '${kHasAds ? 'Ad-free' : 'Popup-free'} time is tied to this device only. It can\'t be '
                 'transferred to another device or account, and isn\'t '
                 'restored if you reinstall.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 10,
                   color: Colors.white24,
                   height: 1.4,
@@ -107,7 +114,7 @@ class TipJarDialog extends StatelessWidget {
 }
 
 String adsFreeLabel(BuildContext context, DateTime until) =>
-    'Ads removed until '
+    '${kHasAds ? 'Ads removed' : 'Popups off'} until '
     '${MaterialLocalizations.of(context).formatMediumDate(until)}';
 
 class _TipOption extends StatelessWidget {

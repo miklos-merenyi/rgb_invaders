@@ -9,7 +9,8 @@ import 'ad_service.dart';
 
 // ── Product IDs ───────────────────────────────────────────────────────────────
 // Consumable products; create them in App Store Connect and the Play Console.
-// iOS uses reverse-domain IDs; Android does not allow dots.
+// iOS and macOS use reverse-domain IDs; Android does not allow dots.
+final _apple = Platform.isIOS || Platform.isMacOS;
 const _kIosTipS = 'com.mermik.rgbinvaders.tip_small';
 const _kIosTipM = 'com.mermik.rgbinvaders.tip_medium';
 const _kIosTipL = 'com.mermik.rgbinvaders.tip_large';
@@ -18,9 +19,9 @@ const _kAndroidTipS = 'tip_small';
 const _kAndroidTipM = 'tip_medium';
 const _kAndroidTipL = 'tip_large';
 
-final kProductTipS = Platform.isIOS ? _kIosTipS : _kAndroidTipS;
-final kProductTipM = Platform.isIOS ? _kIosTipM : _kAndroidTipM;
-final kProductTipL = Platform.isIOS ? _kIosTipL : _kAndroidTipL;
+final kProductTipS = _apple ? _kIosTipS : _kAndroidTipS;
+final kProductTipM = _apple ? _kIosTipM : _kAndroidTipM;
+final kProductTipL = _apple ? _kIosTipL : _kAndroidTipL;
 
 final kAllProductIds = {kProductTipS, kProductTipM, kProductTipL};
 

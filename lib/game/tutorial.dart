@@ -1,4 +1,5 @@
 import 'game.dart';
+import 'keys.dart';
 
 /// One lesson of the tutorial: what to tell the player, and the invaders
 /// (or boss) to drop in for them to shoot.
@@ -40,15 +41,19 @@ class Tutorial {
 
   static final steps = [
     TutorialStep(
-      'Tap RED to fire a ring of colour.\n'
+      '${isMac ? 'Press ${kKeyLabels[GameColors.red]} for' : 'Tap'} RED '
+      'to fire a ring of colour.\n'
       'It destroys invaders of its own colour.',
       (g) => g.dropMonster(GameColors.red),
     ),
     TutorialStep(
-      'Now shoot the GREEN one.',
+      'Now shoot the GREEN one${_key(GameColors.green)}.',
       (g) => g.dropMonster(GameColors.green),
     ),
-    TutorialStep('And the BLUE one.', (g) => g.dropMonster(GameColors.blue)),
+    TutorialStep(
+      'And the BLUE one${_key(GameColors.blue)}.',
+      (g) => g.dropMonster(GameColors.blue),
+    ),
     TutorialStep(
       'A ring passes straight through other colours,\n'
       'and only one ring flies at a time. Shoot both!',
@@ -96,6 +101,9 @@ class Tutorial {
       "Don't let a single invader reach the bottom.",
     ),
   ];
+
+  /// " (K)" after a colour in the Mac app, naming its key.
+  static String _key(int mask) => isMac ? ' (${kKeyLabels[mask]})' : '';
 
   int step = 0;
 

@@ -20,6 +20,40 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -I {} -P 4 \
     adb -s {} install -r build/app/outputs/flutter-apk/app-debug.apk
 ```
 
+## macOS
+
+The Mac app is played with the keyboard: J, K and L press the red, green and
+blue pads (and are written on them). It has no ads (AdMob has no macOS SDK);
+Game Center and tips use the same IDs as iOS.
+
+```sh
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter run -d macos
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build macos --release
+# → build/macos/Build/Products/Release/RGB Invaders.app
+```
+
+## macOS screenshots
+
+The Mac App Store wants 16:10 images. `tool/make_mac_screenshots.py` puts
+window captures from `store_assets/screenshots/macos/raw/` on a starry
+background at 2880×1800, with a caption and the J/K/L chords around them.
+To redo the captures, build the DEMO app (`DEMO_WAVE=3 DEMO_SECONDS=55` gets
+TURBO and a game over quickly), size the window to 380×808 points and capture
+it every half second, then copy the best frames into `raw/` under the names
+the script lists:
+
+```sh
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build macos --debug --dart-define=DEMO=true
+open "build/macos/Build/Products/Debug/RGB Invaders.app"; sleep 1
+osascript -e 'tell application "System Events" to tell process "RGB Invaders" to set size of window 1 to {380, 808}'
+WID=$(swift -e 'import CoreGraphics; let l = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as! [[String: Any]]; for w in l where (w["kCGWindowOwnerName"] as? String) == "RGB Invaders" { print(w["kCGWindowNumber"]!); break }')
+mkdir -p frames; for i in $(seq -w 1 170); do screencapture -x -o -l$WID frames/f$i.png; sleep 0.45; done
+python3 tool/make_mac_screenshots.py
+```
+
+Rebuild without the defines afterwards. The captions use UK spelling
+("colours"), like the app.
+
 ## Store screenshots on the iPad simulator
 
 App Store Connect wants 13-inch iPad screenshots (2064×2752), which is exactly
