@@ -1,3 +1,4 @@
+import '../platform.dart';
 import 'game.dart';
 import 'keys.dart';
 
@@ -41,7 +42,7 @@ class Tutorial {
 
   static final steps = [
     TutorialStep(
-      '${isMac ? 'Press ${kKeyLabels[GameColors.red]} for' : 'Tap'} RED '
+      '${playsWithKeys ? 'Press ${kKeyLabels[GameColors.red]} for' : 'Tap'} RED '
       'to fire a ring of colour.\n'
       'It destroys invaders of its own colour.',
       (g) => g.dropMonster(GameColors.red),
@@ -102,8 +103,8 @@ class Tutorial {
     ),
   ];
 
-  /// " (K)" after a colour in the Mac app, naming its key.
-  static String _key(int mask) => isMac ? ' (${kKeyLabels[mask]})' : '';
+  /// " (K)" after a colour when played with the keys, naming its key.
+  static String _key(int mask) => playsWithKeys ? ' (${kKeyLabels[mask]})' : '';
 
   int step = 0;
 

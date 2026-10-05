@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -7,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../platform.dart';
 import '../services/ad_service.dart';
 import '../services/leaderboard_service.dart';
 import '../services/purchase_service.dart';
@@ -233,15 +233,14 @@ class _GameScreenState extends State<GameScreen>
     }
     if (!mounted) return;
     setState(() => _overlayReady = true);
-    if (tipJar) {
+    if (tipJar && hasStore) {
       await showTipJar(context);
     } else if (lb.shouldPromptFor(score)) {
       await _promptLeaderboard(score);
     }
   }
 
-  String get _platformGames =>
-      Platform.isIOS || Platform.isMacOS ? 'Game Center' : 'Play Games';
+  String get _platformGames => isApple ? 'Game Center' : 'Play Games';
 
   /// Offers sign-in so [score] (and later ones) go on the global leaderboard.
   Future<void> _promptLeaderboard(int score) async {
@@ -467,9 +466,9 @@ class _GameScreenState extends State<GameScreen>
             ] else
               const SizedBox(height: 40),
             if (over) _buildShareLink(),
-            _buildRateLink(),
+            if (hasStore) _buildRateLink(),
             _buildShareAppLink(),
-            _buildSupportLink(),
+            if (hasStore) _buildSupportLink(),
             _buildMusicLink(),
           ],
         ),
@@ -742,7 +741,7 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _rateApp() async {
     final review = InAppReview.instance;
     try {
-      if ((Platform.isIOS || Platform.isMacOS) && _kAppStoreId.isEmpty) {
+      if (isApple && _kAppStoreId.isEmpty) {
         if (await review.isAvailable()) await review.requestReview();
       } else {
         await review.openStoreListing(appStoreId: _kAppStoreId);
@@ -783,14 +782,14 @@ class _GameScreenState extends State<GameScreen>
     final sections = [
       (
         'Fire',
-        '${isMac ? 'Press J, K or L for' : 'Tap'} RED, GREEN or BLUE to '
+        '${playsWithKeys ? 'Press J, K or L for' : 'Tap'} RED, GREEN or BLUE to '
             'fire a ring of that colour. A ring only '
             'destroys invaders of its own colour and passes through the rest. '
             'Only one ring flies at a time.',
       ),
       (
         'Mix colours',
-        'Press ${isMac ? 'keys' : 'buttons'} together to mix:\n'
+        'Press ${playsWithKeys ? 'keys' : 'buttons'} together to mix:\n'
             'RED + GREEN = YELLOW\n'
             'GREEN + BLUE = CYAN\n'
             'RED + BLUE = MAGENTA\n'
@@ -1014,7 +1013,7 @@ class _GameScreenState extends State<GameScreen>
                         pressed: _chords.isHeld(mask),
                         litColor: litColor,
                         ready: _game.canFire,
-                        keyLabel: isMac ? kKeyLabels[mask] : null,
+                        keyLabel: playsWithKeys ? kKeyLabels[mask] : null,
                       ),
                     ),
                   ),

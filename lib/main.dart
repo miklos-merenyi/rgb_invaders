@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -35,6 +36,18 @@ class RgbInvadersApp extends StatelessWidget {
       title: 'RGB Invaders',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
+      // In a wide browser window, keep the game phone-shaped in the middle.
+      builder: (context, child) => kIsWeb
+          ? ColoredBox(
+              color: Colors.black,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: child,
+                ),
+              ),
+            )
+          : child!,
       home: const GameScreen(),
     );
   }

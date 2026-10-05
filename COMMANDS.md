@@ -32,6 +32,20 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build macos --release
 # → build/macos/Build/Products/Release/RGB Invaders.app
 ```
 
+## Web
+
+The web version is played with J, K and L on a computer and by touch on a
+phone. It has no ads, tips, ratings or leaderboard, and stays phone-shaped in
+the middle of a wide window. Sound starts after the first click or tap
+(browsers block audio before that).
+
+```sh
+flutter build web --release      # → build/web
+cd build/web && python3 -m http.server 8000   # then open http://localhost:8000
+```
+
+Use `--base-href /some/path/` when it won't be served from the site's root.
+
 ## macOS screenshots
 
 The Mac App Store wants 16:10 images. `tool/make_mac_screenshots.py` puts

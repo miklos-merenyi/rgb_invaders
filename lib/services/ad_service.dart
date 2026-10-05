@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+import '../platform.dart';
 
 // ── Ad unit IDs ───────────────────────────────────────────────────────────────
 // Same setup as rigobert. The kTest* IDs are Google's official test IDs: safe
@@ -19,21 +19,20 @@ const _kTestIosInterstitialId = 'ca-app-pub-3940256099942544/4411468910';
 const _kReleaseAndroidInterstitialId = '';
 const _kReleaseIosInterstitialId = '';
 
-/// The AdMob SDK only runs on phones and tablets, so the Mac app has no ads.
-bool get kHasAds => switch (defaultTargetPlatform) {
-  TargetPlatform.android || TargetPlatform.iOS => true,
-  _ => false,
-};
+/// The AdMob SDK only runs on phones and tablets, so the Mac app and the web
+/// version have no ads.
+bool get kHasAds =>
+    hasStore &&
+    switch (defaultTargetPlatform) {
+      TargetPlatform.android || TargetPlatform.iOS => true,
+      _ => false,
+    };
 
 String get _interstitialAdUnitId {
   if (kDebugMode) {
-    return Platform.isIOS
-        ? _kTestIosInterstitialId
-        : _kTestAndroidInterstitialId;
+    return isIOS ? _kTestIosInterstitialId : _kTestAndroidInterstitialId;
   }
-  return Platform.isIOS
-      ? _kReleaseIosInterstitialId
-      : _kReleaseAndroidInterstitialId;
+  return isIOS ? _kReleaseIosInterstitialId : _kReleaseAndroidInterstitialId;
 }
 
 /// An interstitial ad is shown after a game only once both at least this

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'game.dart';
@@ -16,6 +15,3 @@ final kKeyLabels = {
   for (final MapEntry(key: key, value: mask) in kColourKeys.entries)
     mask: key.keyLabel,
 };
-
-/// True in the Mac app, which is played with [kColourKeys] instead of touch.
-bool get isMac => defaultTargetPlatform == TargetPlatform.macOS;

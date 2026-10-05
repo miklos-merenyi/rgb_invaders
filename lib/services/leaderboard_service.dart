@@ -1,23 +1,25 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:games_services/games_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../platform.dart';
 
 // ── Leaderboard IDs ───────────────────────────────────────────────────────────
 // One global leaderboard, via Game Center on iOS and macOS and Play Games on
 // Android.
 // The Play Games project ID lives in
 // android/app/src/main/res/values/games-ids.xml. While the ID for the current
-// platform is empty, leaderboards are switched off and never touch the SDK.
+// platform is empty (as on the web), leaderboards are switched off and never
+// touch the SDK.
 
 const _kIosLeaderboardId = 'com.mermik.rgbinvaders.highscores';
 const _kAndroidLeaderboardId = 'CgkI09qroLsNEAIQAA';
 
-final _gameCenter = Platform.isIOS || Platform.isMacOS;
-
-String get _leaderboardId =>
-    _gameCenter ? _kIosLeaderboardId : _kAndroidLeaderboardId;
+String get _leaderboardId => !hasStore
+    ? ''
+    : isApple
+    ? _kIosLeaderboardId
+    : _kAndroidLeaderboardId;
 
 /// Scores below this are not submitted, and don't trigger the sign-in prompt.
 const kLeaderboardMinScore = 20;
@@ -84,7 +86,7 @@ class LeaderboardService extends ChangeNotifier {
     try {
       if (await GamesServices.isSignedIn) {
         await _markSignedIn();
-      } else if (_gameCenter || _hasSignedIn) {
+      } else if (isApple || _hasSignedIn) {
         await GamesServices.signIn();
         await _markSignedIn();
       }

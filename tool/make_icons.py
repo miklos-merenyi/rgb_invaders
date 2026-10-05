@@ -13,6 +13,8 @@ Outputs:
   Android  adaptive icon (API 26+): foreground/background PNG layers per
            density + vector monochrome layer for themed icons (Android 13+);
            legacy square and round PNGs for API 24-25;
+  Web      web/: favicon, 192 and 512 px icons with rounded corners, and
+           maskable ones whose sprite stays inside the safe zone.
   Stores   store_assets/: 512x512 Google Play icon, 1024x1024 App Store icon.
 """
 
@@ -23,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 IOS_SET = os.path.join(ROOT, "ios/Runner/Assets.xcassets/AppIcon.appiconset")
+WEB = os.path.join(ROOT, "web")
 RES = os.path.join(ROOT, "android/app/src/main/res")
 STORE = os.path.join(ROOT, "store_assets")
 
@@ -294,6 +297,25 @@ def write_android():
         f.write(monochrome_vector())
 
 
+# ── Web ──────────────────────────────────────────────────────────────────────
+
+def write_web():
+    icon = full_icon(32).convert("RGBA")
+    icon.putalpha(rounded_mask(32, 0.18))
+    icon.save(os.path.join(WEB, "favicon.png"))
+    for size in (192, 512):
+        icon = full_icon(size).convert("RGBA")
+        icon.putalpha(rounded_mask(size, 0.18))
+        icon.save(os.path.join(WEB, "icons", f"Icon-{size}.png"))
+        # Maskable: the launcher crops it, so it fills the square and the
+        # sprite shrinks into the middle, as in the Android adaptive icon.
+        bg = render(background, size).convert("RGBA")
+        Image.alpha_composite(
+            bg, render(foreground, size, scale=ADAPTIVE_SCALE)
+        ).convert("RGB").save(
+            os.path.join(WEB, "icons", f"Icon-maskable-{size}.png"))
+
+
 # ── Store listings ───────────────────────────────────────────────────────────
 
 def write_store():
@@ -308,4 +330,5 @@ def write_store():
 if __name__ == "__main__":
     write_ios()
     write_android()
+    write_web()
     write_store()

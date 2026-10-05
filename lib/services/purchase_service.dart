@@ -1,16 +1,15 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../platform.dart';
 
 import 'ad_service.dart';
 
 // ── Product IDs ───────────────────────────────────────────────────────────────
 // Consumable products; create them in App Store Connect and the Play Console.
 // iOS and macOS use reverse-domain IDs; Android does not allow dots.
-final _apple = Platform.isIOS || Platform.isMacOS;
 const _kIosTipS = 'com.mermik.rgbinvaders.tip_small';
 const _kIosTipM = 'com.mermik.rgbinvaders.tip_medium';
 const _kIosTipL = 'com.mermik.rgbinvaders.tip_large';
@@ -19,9 +18,9 @@ const _kAndroidTipS = 'tip_small';
 const _kAndroidTipM = 'tip_medium';
 const _kAndroidTipL = 'tip_large';
 
-final kProductTipS = _apple ? _kIosTipS : _kAndroidTipS;
-final kProductTipM = _apple ? _kIosTipM : _kAndroidTipM;
-final kProductTipL = _apple ? _kIosTipL : _kAndroidTipL;
+final kProductTipS = isApple ? _kIosTipS : _kAndroidTipS;
+final kProductTipM = isApple ? _kIosTipM : _kAndroidTipM;
+final kProductTipL = isApple ? _kIosTipL : _kAndroidTipL;
 
 final kAllProductIds = {kProductTipS, kProductTipM, kProductTipL};
 
@@ -105,7 +104,8 @@ class PurchaseService extends ChangeNotifier {
       _adsFreeUntil = DateTime.fromMillisecondsSinceEpoch(storedMs);
     }
 
-    _available = await _iap.isAvailable();
+    // No store on the web, and no in_app_purchase plugin to ask.
+    _available = hasStore && await _iap.isAvailable();
     if (!_available) {
       notifyListeners();
       return;
