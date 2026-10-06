@@ -312,16 +312,16 @@ void main() {
     expect(g.phase, GamePhase.playing);
   });
 
-  test('boss ends the game when its lowest solid band hits the bottom', () {
+  test('boss ends the game when its bottom hits the bottom, even if shot '
+      'away', () {
     final g = _bossGame();
     final b = g.boss!;
-    // With its three bottom bands gone the boss can sink further.
     b.alive = 5;
-    // Band 4 (sprite row 4) ends 5 pixels below the top.
-    b.y = (g.size.height - 5 * g.bossPixel) / g.size.height - 0.01;
+    // The last sprite row ends 5 pixels above the bottom.
+    b.y = (g.size.height - Boss.bandCount * g.bossPixel - 5) / g.size.height;
     g.update(1 / 60);
     expect(g.phase, GamePhase.playing);
-    b.y += 0.02;
+    b.y += 10 / g.size.height;
     g.update(1 / 60);
     expect(g.phase, GamePhase.over);
   });

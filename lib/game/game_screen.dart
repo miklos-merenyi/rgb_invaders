@@ -103,6 +103,23 @@ class _GameScreenState extends State<GameScreen>
   /// [_maxStartWave].
   int get _startWaves => min(LeaderboardService().bestWave, _maxStartWave);
 
+  /// The colour buttons, left to right.
+  static const _pads = [GameColors.red, GameColors.green, GameColors.blue];
+
+  /// When each pad blows up after a game over, in seconds after it.
+  static const _padBlastTimes = [0.15, 0.3, 0.45];
+
+  /// How long a blown-up pad takes to pop back in for the next game.
+  static const _padReturn = 0.3;
+
+  /// [_clock] when the game ended and the pads started blowing up, and how
+  /// many have gone so far.
+  double? _padsBlownAt;
+  int _padsBlown = 0;
+
+  /// [_clock] when blown-up pads came back for a new game.
+  double _padsBackAt = double.negativeInfinity;
+
   /// Turns near-simultaneous button presses into one mixed colour.
   late final ChordDetector _chords = ChordDetector(onChord: _fire);
 
@@ -200,15 +217,44 @@ class _GameScreenState extends State<GameScreen>
       setState(() {});
     }
     if (_kDemo) _demoTurn();
+    _blowUpPads();
     _frame.value++;
     if (_game.phase != _shownPhase) {
       setState(() => _shownPhase = _game.phase);
       if (_shownPhase == GamePhase.over) {
+        _chords.reset();
+        _padsBlownAt = _clock;
+        _padsBlown = 0;
         _sounds.stopMusic();
         _sounds.gameOver();
         _afterGameOver();
       }
     }
+  }
+
+  /// Bangs for each pad as its time comes after a game over.
+  void _blowUpPads() {
+    final at = _padsBlownAt;
+    if (at == null) return;
+    while (_padsBlown < _pads.length &&
+        _clock - at >= _padBlastTimes[_padsBlown]) {
+      _sounds.padBlast(_pads[_padsBlown++]);
+    }
+  }
+
+  /// Seconds since pad [i] blew up, or null while it's whole.
+  double? _padBlastAge(int i) {
+    final at = _padsBlownAt;
+    if (at == null) return null;
+    final age = _clock - at - _padBlastTimes[i];
+    return age < 0 ? null : age;
+  }
+
+  /// Brings blown-up pads back, popping in, for a new game.
+  void _restorePads() {
+    if (_padsBlownAt == null) return;
+    _padsBlownAt = null;
+    _padsBackAt = _clock;
   }
 
   /// Counts the game and submits its score, then shows an ad once
@@ -351,6 +397,7 @@ class _GameScreenState extends State<GameScreen>
     if (!_overlayReady) return;
     _tutorial = null;
     _chords.reset();
+    _restorePads();
     _game.start(wave: _kDemo ? _kDemoWave : min(_startWave, _startWaves));
     _sounds.start();
     _sounds.newGameMusic();
@@ -360,6 +407,7 @@ class _GameScreenState extends State<GameScreen>
   void _startTutorial() {
     if (!_overlayReady) return;
     _chords.reset();
+    _restorePads();
     _tutorial = Tutorial(_game)..begin();
     _sounds.start();
     _sounds.newGameMusic();
@@ -1042,6 +1090,18 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  static const _padShakeTime = 0.15;
+
+  /// Jolts the pads for a moment as each one blows up.
+  Offset _padShake() {
+    final ages = [for (var i = 0; i < _pads.length; i++) ?_padBlastAge(i)];
+    if (ages.isEmpty) return Offset.zero;
+    final t = ages.reduce(min);
+    if (t >= _padShakeTime) return Offset.zero;
+    final k = 6 * (1 - t / _padShakeTime);
+    return Offset(sin(t * 90) * k, cos(t * 77) * k);
+  }
+
   Widget _buildButtons() {
     final held = _chords.held;
     final litColor = GameColors.of(held);
@@ -1051,31 +1111,41 @@ class _GameScreenState extends State<GameScreen>
       builder: (context, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            height: 110,
-            child: Row(
-              children: [
-                for (final mask in const [
-                  GameColors.red,
-                  GameColors.green,
-                  GameColors.blue,
-                ])
-                  Expanded(
-                    child: Listener(
-                      behavior: HitTestBehavior.opaque,
-                      onPointerDown: (e) => _onButtonDown(e, mask),
-                      onPointerUp: _onButtonUp,
-                      onPointerCancel: _onButtonUp,
-                      child: ColorPad(
-                        mask: mask,
-                        pressed: _chords.isHeld(mask),
-                        litColor: litColor,
-                        ready: _game.canFire,
-                        keyLabel: playsWithKeys ? kKeyLabels[mask] : null,
+          Transform.translate(
+            offset: _padShake(),
+            child: SizedBox(
+              height: 110,
+              child: Row(
+                children: [
+                  for (final (i, mask) in _pads.indexed)
+                    Expanded(
+                      child: Listener(
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: (e) => _onButtonDown(e, mask),
+                        onPointerUp: _onButtonUp,
+                        onPointerCancel: _onButtonUp,
+                        child: switch (_padBlastAge(i)) {
+                          final age? => PadBlast(mask: mask, t: age),
+                          null => Transform.scale(
+                            scale: Curves.easeOutBack.transform(
+                              ((_clock - _padsBackAt) / _padReturn).clamp(
+                                0.0,
+                                1.0,
+                              ),
+                            ),
+                            child: ColorPad(
+                              mask: mask,
+                              pressed: _chords.isHeld(mask),
+                              litColor: litColor,
+                              ready: _game.canFire,
+                              keyLabel: playsWithKeys ? kKeyLabels[mask] : null,
+                            ),
+                          ),
+                        },
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           MixLegend(held: held),

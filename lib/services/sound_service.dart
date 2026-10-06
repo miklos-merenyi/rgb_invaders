@@ -24,6 +24,13 @@ const _kExplosionAssets = {
   6: 'assets/sounds/explosion_6.wav',
   7: 'assets/sounds/explosion_7.wav',
 };
+
+/// The colour buttons blowing up at game over.
+const _kPadBlastAssets = {
+  1: 'assets/sounds/pad_blast_1.wav',
+  2: 'assets/sounds/pad_blast_2.wav',
+  4: 'assets/sounds/pad_blast_4.wav',
+};
 const _kMiss = 'assets/sounds/miss.wav';
 const _kDud = 'assets/sounds/dud.wav';
 const _kGameOver = 'assets/sounds/game_over.wav';
@@ -125,6 +132,7 @@ class SoundService extends ChangeNotifier {
       for (final asset in [
         ..._kFireAssets.values,
         ..._kExplosionAssets.values,
+        ..._kPadBlastAssets.values,
         _kMiss,
         _kDud,
         _kGameOver,
@@ -251,6 +259,8 @@ class SoundService extends ChangeNotifier {
   void fire(int mask) => _play(_kFireAssets[mask] ?? _kFireAssets[7]!);
   void explosion(int mask) =>
       _play(_kExplosionAssets[mask] ?? _kExplosionAssets[7]!);
+  void padBlast(int mask) =>
+      _play(_kPadBlastAssets[mask] ?? _kPadBlastAssets[1]!);
   void miss() => _play(_kMiss);
   void dud() => _play(_kDud);
   void gameOver() => _play(_kGameOver);

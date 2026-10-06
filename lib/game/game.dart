@@ -454,7 +454,9 @@ class Game {
       b.y = bossEntering
           ? min(b.y + bossEntrySpeed * dt, bossEntryY)
           : b.y + b.speed * dt + push;
-      if (bossBandRect(b, b.alive - 1).bottom >= size.height) {
+      // Shot-away bands count too: the whole sprite has to stay above the
+      // bottom.
+      if (bossBandRect(b, Boss.bandCount - 1).bottom >= size.height) {
         if (!practice) {
           _gameOver();
           return;

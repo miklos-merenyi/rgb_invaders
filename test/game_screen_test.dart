@@ -87,6 +87,35 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
+  testWidgets('the pads blow up at game over and come back for the next '
+      'game', (t) async {
+    final game = Game()..spawning = false;
+    await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));
+    await t.pump(const Duration(milliseconds: 16));
+    await t.tap(find.text('Start Game'));
+    game.spawning = false;
+    game.monsters.add(
+      Monster(mask: GameColors.red, baseX: 0.5, speed: 0, phase: 0)..y = 1,
+    );
+    await t.pump(const Duration(milliseconds: 16));
+    await t.pump(const Duration(milliseconds: 16));
+    expect(game.phase, GamePhase.over);
+    expect(find.byType(ColorPad), findsNWidgets(3));
+
+    await t.pump(const Duration(milliseconds: 200));
+    expect(find.byType(PadBlast), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 1000));
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.byType(PadBlast), findsNWidgets(3));
+    expect(find.byType(ColorPad), findsNothing);
+
+    await t.tap(find.text('Play Again'));
+    game.spawning = false;
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.byType(ColorPad), findsNWidgets(3));
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a game can start at any wave reached before', (t) async {
     final game = Game()..spawning = false;
     await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));

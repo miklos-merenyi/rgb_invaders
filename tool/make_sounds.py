@@ -6,7 +6,8 @@ Run from the repo root:  python3 tool/make_sounds.py   (needs numpy)
 Pitched sounds are in Ab minor, the key of the music. Fire sounds use
 Ab minor pentatonic, one note per colour combination:
 R=Gb4, G=Ab4, B=B4, RG=Db5, RB=Eb5, GB=Gb5, RGB=Ab5. Explosions ring on the
-same note an octave lower.
+same note an octave lower. The colour buttons blowing up at game over ring
+two octaves lower.
 """
 
 import os
@@ -97,6 +98,28 @@ def explosion(freq):
     return (crackle * 1.2 + thump + ring * 0.9) * envelope(len(t), attack=0.001)
 
 
+def pad_blast(freq, seed):
+    """A colour button blowing up: a deep boom, a roar that darkens as it
+    dies, debris rattling down, and a ring two octaves below its fire note."""
+    rng = np.random.default_rng(seed)
+    t = t_axis(1.1)
+    boom = np.sin(sweep_phase(32 + 110 * np.exp(-t / 0.07))) * np.exp(-t / 0.22)
+    noise = rng.uniform(-1, 1, len(t))
+    roar = lowpass(noise, 5000 * np.exp(-t / 0.18) + 150)
+    roar *= np.exp(-t / 0.3) * (1 - np.exp(-t / 0.004))
+    # Sparse clicks, thinning out, for bits landing.
+    clicks = np.zeros(len(t))
+    for start in rng.uniform(0.08, 0.9, 40) ** 1.5:
+        i = int(start * RATE)
+        n = min(int(0.006 * RATE), len(t) - i)
+        clicks[i:i + n] += rng.uniform(-1, 1, n) * np.exp(-np.arange(n) / 60)
+    debris = lowpass(clicks, 3500) * np.exp(-t / 0.5) * 2.5
+    ph = 2 * np.pi * freq / 4 * t
+    ring = (np.sin(ph) + 0.4 * np.sin(2 * ph)) * np.exp(-t / 0.35)
+    x = boom * 1.4 + roar * 1.3 + debris + ring * 0.6
+    return x * envelope(len(t), attack=0.001, release=0.1)
+
+
 def miss():
     """Soft falling fizzle when a circle leaves the top without a hit."""
     t = t_axis(0.3)
@@ -149,6 +172,8 @@ def main():
     for mask, freq in FIRE_NOTES.items():
         save(f"fire_{mask}", fire(freq), 0.7)
         save(f"explosion_{mask}", explosion(freq), 0.9)
+    for mask in (1, 2, 4):
+        save(f"pad_blast_{mask}", pad_blast(FIRE_NOTES[mask], mask), 0.95)
     save("miss", miss(), 0.4)
     save("dud", dud(), 0.35)
     save("game_over", game_over(), 0.4)

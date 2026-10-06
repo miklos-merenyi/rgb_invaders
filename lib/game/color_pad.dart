@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -171,6 +172,107 @@ class _PadPainter extends CustomPainter {
   @override
   bool shouldRepaint(_PadPainter old) =>
       old.t != t || old.base != base || old.lit != lit;
+}
+
+/// A colour button blowing up at game over: a flash, a shock ring and
+/// chunks of the pad flying out and falling away.
+class PadBlast extends StatelessWidget {
+  const PadBlast({super.key, required this.mask, required this.t});
+
+  final int mask;
+
+  /// Seconds since the pad blew up.
+  final double t;
+
+  /// How long the blast lasts.
+  static const double duration = 0.7;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _BlastPainter(GameColors.of(mask), t / duration, mask),
+    child: const SizedBox.expand(),
+  );
+}
+
+class _BlastPainter extends CustomPainter {
+  _BlastPainter(this.color, this.k, this.seed);
+
+  final Color color;
+
+  /// Progress, 0 to 1.
+  final double k;
+
+  /// Gives each pad its own scatter of chunks.
+  final int seed;
+
+  static const _chunks = 16;
+  static const _gravity = 1400.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (k >= 1) return;
+    final t = k * PadBlast.duration;
+    final center = size.center(Offset.zero);
+    final fade = 1 - k;
+
+    // A white-hot flash where the pad was.
+    if (k < 0.25) {
+      final f = 1 - k / 0.25;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center,
+            width: size.width * (0.8 + 0.4 * k),
+            height: size.height * (0.8 + 0.4 * k),
+          ),
+          Radius.circular(size.shortestSide * 0.28),
+        ),
+        Paint()
+          ..color = Color.lerp(Colors.white, color, k * 4)!.withValues(alpha: f)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+      );
+    }
+
+    // Shock ring.
+    canvas.drawCircle(
+      center,
+      size.shortestSide * (0.3 + 1.4 * Curves.easeOut.transform(k)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6 * fade
+        ..color = color.withValues(alpha: 0.8 * fade),
+    );
+
+    // Chunks of the pad, mostly thrown upwards, tumbling as they fall.
+    final random = Random(seed);
+    final paint = Paint()..color = color.withValues(alpha: fade);
+    for (var i = 0; i < _chunks; i++) {
+      final a = -pi / 2 + (random.nextDouble() - 0.5) * pi * 1.4;
+      final speed = 250 + random.nextDouble() * 450;
+      final side = 6 + random.nextDouble() * 12;
+      final spin = (random.nextDouble() - 0.5) * 20;
+      final start =
+          center +
+          Offset(
+            (random.nextDouble() - 0.5) * size.width * 0.6,
+            (random.nextDouble() - 0.5) * size.height * 0.5,
+          );
+      final pos =
+          start +
+          Offset(cos(a) * speed * t, sin(a) * speed * t + _gravity * t * t / 2);
+      canvas.save();
+      canvas.translate(pos.dx, pos.dy);
+      canvas.rotate(spin * t);
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: side, height: side * 0.7),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BlastPainter old) => old.k != k;
 }
 
 /// Shows the four colour mixes under the buttons; the one being held lights up.

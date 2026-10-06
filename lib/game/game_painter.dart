@@ -124,7 +124,7 @@ class GamePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     game.size = size;
-    // Shot-away boss bands keep falling past the bottom edge.
+    // Keep the shake and a boss sliding in from above inside the field.
     canvas.clipRect(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, Paint()..color = Colors.black);
     canvas.save();
