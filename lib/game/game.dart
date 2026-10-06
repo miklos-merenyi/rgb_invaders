@@ -335,7 +335,8 @@ class Game {
     return Offset((m.baseX + sway) * size.width, m.y * size.height);
   }
 
-  void start() {
+  /// Starts a new game at [wave] (1-based).
+  void start({int wave = 1}) {
     monsters.clear();
     explosions.clear();
     pulse = null;
@@ -344,7 +345,7 @@ class Game {
     score = 0;
     spawned = 0;
     time = 0;
-    wave = 1;
+    this.wave = wave;
     _waveSpawns = 0;
     waveTime = 0;
     _endStreak();

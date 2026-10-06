@@ -43,6 +43,19 @@ void _runPulse(Game g) {
 }
 
 void main() {
+  test('a game can start at a later wave, in its group size', () {
+    final g = Game(random: Random(1))
+      ..size = const Size(400, 800)
+      ..start(wave: 3);
+    expect(g.wave, 3);
+    while (g.monsters.isEmpty) {
+      g.update(0.05);
+    }
+    expect(g.monsters.length, Game.groupSizeFor(3));
+    g.start();
+    expect(g.wave, 1);
+  });
+
   test('only one circle at a time', () {
     final g = _newGame();
     expect(g.fire(GameColors.red), isTrue);

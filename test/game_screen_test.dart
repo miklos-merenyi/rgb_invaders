@@ -1,6 +1,7 @@
 import 'package:rgb_invaders/game/color_pad.dart';
 import 'package:rgb_invaders/game/game.dart';
 import 'package:rgb_invaders/game/game_screen.dart';
+import 'package:rgb_invaders/services/leaderboard_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,6 +84,27 @@ void main() {
     await t.pump(const Duration(milliseconds: 16));
     expect(find.text('GAME OVER'), findsOneWidget);
     expect(find.textContaining('remove ads'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a game can start at any wave reached before', (t) async {
+    final game = Game()..spawning = false;
+    await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.text('Start at wave'), findsNothing);
+
+    await LeaderboardService().recordWave(3);
+    await t.pumpWidget(const SizedBox());
+    await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.text('Start at wave'), findsOneWidget);
+    expect(find.text('4'), findsNothing);
+    await t.tap(find.text('3'));
+    await t.pump(const Duration(milliseconds: 16));
+    await t.tap(find.text('Start Game'));
+    await t.pump(const Duration(milliseconds: 16));
+
+    expect(game.wave, 3);
     await t.pumpWidget(const SizedBox());
   });
 }

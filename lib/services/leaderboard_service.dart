@@ -33,6 +33,9 @@ const _kOptedOut = 'leaderboard_opted_out';
 // The player's best score on this device, posted after any sign-in so bests
 // set while signed out still reach the leaderboard.
 const _kBest = 'best_score';
+// The highest wave the player has reached on this device, which a new game
+// can start at.
+const _kBestWave = 'best_wave';
 
 class LeaderboardService extends ChangeNotifier {
   static final LeaderboardService _instance = LeaderboardService._();
@@ -44,6 +47,7 @@ class LeaderboardService extends ChangeNotifier {
   bool _optedOut = false;
   bool _promptedThisSession = false;
   int _best = 0;
+  int _bestWave = 1;
 
   /// False until the leaderboard IDs for this platform are filled in.
   bool get enabled => _leaderboardId.isNotEmpty;
@@ -52,6 +56,9 @@ class LeaderboardService extends ChangeNotifier {
 
   /// The best score saved on this device.
   int get best => _best;
+
+  /// The highest wave reached on this device.
+  int get bestWave => _bestWave;
 
   /// True when the game just finished with [score] should offer sign-in:
   /// at most once per launch, and never after the player declined.
@@ -67,6 +74,7 @@ class LeaderboardService extends ChangeNotifier {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _best = prefs.getInt(_kBest) ?? 0;
+    _bestWave = prefs.getInt(_kBestWave) ?? 1;
     if (!enabled) return;
     _hasSignedIn = prefs.getBool(_kHasSignedIn) ?? false;
     _optedOut = prefs.getBool(_kOptedOut) ?? false;
@@ -143,6 +151,14 @@ class LeaderboardService extends ChangeNotifier {
       await prefs.setInt(_kBest, score);
     }
     await submitScore(score);
+  }
+
+  /// Saves [wave] if it's the highest reached so far.
+  Future<void> recordWave(int wave) async {
+    if (wave <= _bestWave) return;
+    _bestWave = wave;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kBestWave, wave);
   }
 
   /// Posts the saved best. The platform keeps only each player's best, so

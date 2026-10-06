@@ -61,7 +61,9 @@ class _GameScreenState extends State<GameScreen>
   late final Game _game = (widget.game ?? Game())
     ..onHit = _sounds.explosion
     ..onMiss = _sounds.miss
-    ..onWave = ((_) {
+    ..onWave = ((wave) {
+      // Tutorial bosses move the wave on too, but don't count as reaching it.
+      if (!_game.practice && !_kDemo) LeaderboardService().recordWave(wave);
       _sounds.start();
       _sounds.waveMusic();
     })
@@ -90,6 +92,16 @@ class _GameScreenState extends State<GameScreen>
 
   /// The tutorial while it runs, in a practice round.
   Tutorial? _tutorial;
+
+  /// Wave the next game starts at, picked on the start screen.
+  int _startWave = 1;
+
+  /// Highest wave the start screen offers, once the player has reached it.
+  static const _maxStartWave = 5;
+
+  /// Waves the player may start at: those reached before, up to
+  /// [_maxStartWave].
+  int get _startWaves => min(LeaderboardService().bestWave, _maxStartWave);
 
   /// Turns near-simultaneous button presses into one mixed colour.
   late final ChordDetector _chords = ChordDetector(onChord: _fire);
@@ -339,8 +351,7 @@ class _GameScreenState extends State<GameScreen>
     if (!_overlayReady) return;
     _tutorial = null;
     _chords.reset();
-    _game.start();
-    if (_kDemo) _game.wave = _kDemoWave;
+    _game.start(wave: _kDemo ? _kDemoWave : min(_startWave, _startWaves));
     _sounds.start();
     _sounds.newGameMusic();
     setState(() => _shownPhase = _game.phase);
@@ -450,6 +461,10 @@ class _GameScreenState extends State<GameScreen>
               _startGame,
               primary: true,
             ),
+            if (_startWaves > 1) ...[
+              const SizedBox(height: 12),
+              _buildWavePicker(),
+            ],
             const SizedBox(height: 12),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -473,6 +488,49 @@ class _GameScreenState extends State<GameScreen>
           ],
         ),
       ),
+    );
+  }
+
+  /// "Start at wave" with a button per wave reached so far, the picked one
+  /// filled in.
+  Widget _buildWavePicker() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Start at wave',
+          style: TextStyle(color: Colors.white70, fontSize: 15),
+        ),
+        const SizedBox(width: 6),
+        for (var w = 1; w <= _startWaves; w++)
+          GestureDetector(
+            onTap: () => setState(() => _startWave = w),
+            child: Container(
+              width: 34,
+              height: 34,
+              margin: const EdgeInsets.only(left: 6),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: w == _startWave
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.07),
+                border: Border.all(
+                  color: w == _startWave ? Colors.white : Colors.white38,
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                '$w',
+                style: TextStyle(
+                  color: w == _startWave ? Colors.black : Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
