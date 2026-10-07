@@ -17,7 +17,7 @@
     <key>provisioningProfiles</key>
     <dict>
         <key>com.mermik.rgbinvaders</key>
-        <string>RGB Invaders Mac App Store</string>
+        <string>RGB Invaders macos</string>
     </dict>
 </dict>
 </plist>

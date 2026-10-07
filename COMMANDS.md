@@ -243,9 +243,16 @@ platform added. Bump the build number as for iOS.
    (`security find-identity -v` lists both).
 2. At developer.apple.com → Profiles → **+** → **Mac App Store Connect**, pick
    the App ID `com.mermik.rgbinvaders` and the Apple Distribution
-   certificate, and name the profile exactly **`RGB Invaders Mac App Store`**
+   certificate, and name the profile exactly **`RGB Invaders macos`**
    (the Release configuration and `macos/ExportOptionsAppStore.plist` refer
-   to it). Download it and double-click it to install.
+   to it). Download it. Double-clicking doesn't install a Mac profile;
+   copy it into Xcode's profile folder under its UUID instead:
+
+   ```sh
+   P=~/Downloads/RGB_Invaders_macos.provisionprofile
+   UUID=$(security cms -D -i "$P" | plutil -extract UUID raw -)
+   cp "$P" ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$UUID.provisionprofile
+   ```
 
 ### Build, export, upload
 

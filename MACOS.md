@@ -44,22 +44,21 @@ products apply to it. Build commands are in COMMANDS.md, under "macOS".
 ## Signing and upload
 
 The Release configuration is signed manually with Apple Distribution and the
-`RGB Invaders Mac App Store` profile. The Game Center entitlement needs a
-real signature, and automatic signing would need this Mac registered as a
-device. So a release build can't be made until the profile is installed, and
-the release `.app` only runs once installed from the store (or TestFlight).
+`RGB Invaders macos` profile. The Game Center entitlement needs a real
+signature, and automatic signing would need this Mac registered as a device.
+So a release build needs the profile installed, and the release `.app` only
+runs once installed from the store (or TestFlight).
 
-- [ ] At developer.apple.com, create a **Mac App Store Connect** provisioning
-      profile for `com.mermik.rgbinvaders` with the Apple Distribution
-      certificate. Name it e.g. **`RGB Invaders Mac App Store`** and install
-      it.
+- [x] The **Mac App Store Connect** profile `RGB Invaders macos` (Apple
+      Distribution certificate, Game Center) is installed; see COMMANDS.md.
 - [x] The **3rd Party Mac Developer Installer** certificate (signs the
       `.pkg` that gets uploaded) is in the keychain.
 - [x] `macos/ExportOptionsAppStore.plist` exists.
 - [x] **Release build fixed.** Flutter 3.47.5 works with Xcode 27's `lipo`;
       the app is universal (arm64 + x86_64).
-- [ ] Archive, export and upload, following COMMANDS.md ("Mac App Store").
-      Not run yet, because the profile doesn't exist yet.
+- [x] Archive and export, following COMMANDS.md ("Mac App Store"). This
+      makes a signed, universal `RGB Invaders.pkg`.
+- [ ] Upload the `.pkg` and check it's processed in App Store Connect.
 
 ## Store listing
 

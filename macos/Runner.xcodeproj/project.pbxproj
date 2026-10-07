@@ -649,7 +649,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PROVISIONING_PROFILE_SPECIFIER = "RGB Invaders Mac App Store";
+				PROVISIONING_PROFILE_SPECIFIER = "RGB Invaders macos";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
