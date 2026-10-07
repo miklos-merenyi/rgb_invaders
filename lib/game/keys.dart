@@ -10,6 +10,9 @@ final kColourKeys = {
   LogicalKeyboardKey.keyL: GameColors.blue,
 };
 
+/// The keys that press "Start Game" or "Play Again" when it's on screen.
+final kStartKeys = {LogicalKeyboardKey.enter, LogicalKeyboardKey.numpadEnter};
+
 /// The key for each colour button, by its mask.
 final kKeyLabels = {
   for (final MapEntry(key: key, value: mask) in kColourKeys.entries)

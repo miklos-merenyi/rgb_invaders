@@ -23,8 +23,9 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -I {} -P 4 \
 ## macOS
 
 The Mac app is played with the keyboard: J, K and L press the red, green and
-blue pads (and are written on them). It has no ads (AdMob has no macOS SDK);
-Game Center and tips use the same IDs as iOS.
+blue pads (and are written on them), and Return presses "Start Game" or
+"Play Again". It has no ads (AdMob has no macOS SDK); Game Center and tips use
+the same IDs as iOS.
 
 ```sh
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter run -d macos

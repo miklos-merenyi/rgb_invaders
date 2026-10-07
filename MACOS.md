@@ -17,8 +17,9 @@ products apply to it. Build commands are in COMMANDS.md, under "macOS".
 - [x] **Signing team.** `DEVELOPMENT_TEAM = 4MN8W74K9M` is set for the Runner
       target. Debug builds are still signed ad hoc, so `flutter run` works
       without a profile.
-- [ ] **Start with the keyboard (optional).** Space or Return could press
-      "Start Game"/"Play Again", so a game can be played without the mouse.
+- [x] **Start with the keyboard.** Return (or Enter on the number pad)
+      presses "Start Game"/"Play Again", so a game can be played without the
+      mouse.
 
 ## Game Center
 

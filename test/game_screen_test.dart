@@ -116,6 +116,40 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
+  testWidgets('Enter starts a game, and plays again once game over shows', (
+    t,
+  ) async {
+    final game = Game()..spawning = false;
+    await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));
+    await t.pump(const Duration(milliseconds: 16));
+    await t.sendKeyEvent(LogicalKeyboardKey.enter);
+    game.spawning = false;
+    await t.pump(const Duration(milliseconds: 16));
+    expect(game.phase, GamePhase.playing);
+    expect(find.text('Start Game'), findsNothing);
+
+    // Enter does nothing mid-game, or during the pause before game over.
+    await t.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(game.phase, GamePhase.playing);
+    game.monsters.add(
+      Monster(mask: GameColors.red, baseX: 0.5, speed: 0, phase: 0)..y = 1,
+    );
+    await t.pump(const Duration(milliseconds: 16));
+    await t.pump(const Duration(milliseconds: 16));
+    expect(game.phase, GamePhase.over);
+    await t.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(game.phase, GamePhase.over);
+
+    await t.pump(const Duration(milliseconds: 1100));
+    await t.pump(const Duration(milliseconds: 16));
+    expect(find.text('Play Again'), findsOneWidget);
+    await t.sendKeyEvent(LogicalKeyboardKey.numpadEnter);
+    game.spawning = false;
+    await t.pump(const Duration(milliseconds: 16));
+    expect(game.phase, GamePhase.playing);
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a game can start at any wave reached before', (t) async {
     final game = Game()..spawning = false;
     await t.pumpWidget(MaterialApp(home: GameScreen(game: game)));

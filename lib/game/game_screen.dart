@@ -376,6 +376,12 @@ class _GameScreenState extends State<GameScreen>
   /// Presses and releases colour buttons from [kColourKeys]. Keys go through
   /// the chord detector like fingers, so J and K together fire YELLOW.
   bool _onKey(KeyEvent e) {
+    if (kStartKeys.contains(e.logicalKey)) {
+      if (e is! KeyDownEvent || !_startShown) return false;
+      if (!(ModalRoute.of(context)?.isCurrent ?? true)) return false;
+      _startGame();
+      return true;
+    }
     final mask = kColourKeys[e.logicalKey];
     if (mask == null) return false;
     switch (e) {
@@ -392,6 +398,16 @@ class _GameScreenState extends State<GameScreen>
     }
     return true;
   }
+
+  /// The start or game-over menu is on screen.
+  bool get _menuShown =>
+      _shownPhase == GamePhase.ready ||
+      _shownPhase == GamePhase.over && _overlayReady;
+
+  /// A "Start Game" or "Play Again" button is on screen, so Enter can press
+  /// it.
+  bool get _startShown =>
+      _tutorial?.finished ?? (_menuShown && _overlayReady);
 
   void _startGame() {
     if (!_overlayReady) return;
@@ -451,9 +467,7 @@ class _GameScreenState extends State<GameScreen>
                       repaint: _frame,
                     ),
                   ),
-                  if (_shownPhase == GamePhase.ready ||
-                      _shownPhase == GamePhase.over && _overlayReady)
-                    _buildOverlay(),
+                  if (_menuShown) _buildOverlay(),
                   if (_tutorial case final tutorial?)
                     tutorial.finished
                         ? _buildTutorialEnd(tutorial.text)
