@@ -8,30 +8,24 @@ products apply to it. Build commands are in COMMANDS.md, under "macOS".
 
 ## App and icon
 
-- [ ] **App icon.** `macos/Runner/Assets.xcassets/AppIcon.appiconset` still
-      holds Flutter's default icon. Generate the 16–1024 px sizes from
-      `store_assets/app_store_icon_1024.png`. macOS doesn't round the corners
-      for you, so give it the rounded-square shape with some transparent
-      margin, the way other Mac icons are drawn.
-- [ ] **App category.** Add `LSApplicationCategoryType` =
-      `public.app-category.arcade-games` (or `games`) to
-      `macos/Runner/Info.plist`. The Mac App Store rejects uploads without it.
-- [ ] **Export compliance.** Copy `ITSAppUsesNonExemptEncryption` = `false`
-      from `ios/Runner/Info.plist` into `macos/Runner/Info.plist`, so builds
-      skip the export compliance question as the iOS ones do.
-- [ ] **Signing team.** Set `DEVELOPMENT_TEAM = 4MN8W74K9M` for the Runner
-      target in `macos/Runner.xcodeproj` (Xcode → Runner → Signing &
-      Capabilities).
+- [x] **App icon.** `tool/make_icons.py` draws the 16–1024 px sizes as a
+      rounded square with a shadow on Apple's Mac icon grid.
+- [x] **App category.** `LSApplicationCategoryType` =
+      `public.app-category.arcade-games` is in `macos/Runner/Info.plist`.
+- [x] **Export compliance.** `ITSAppUsesNonExemptEncryption` = `false` is in
+      `macos/Runner/Info.plist`.
+- [x] **Signing team.** `DEVELOPMENT_TEAM = 4MN8W74K9M` is set for the Runner
+      target. Debug builds are still signed ad hoc, so `flutter run` works
+      without a profile.
 - [ ] **Start with the keyboard (optional).** Space or Return could press
       "Start Game"/"Play Again", so a game can be played without the mouse.
 
 ## Game Center
 
-- [ ] Add the `com.apple.developer.game-center` entitlement (set to `true`)
-      to `macos/Runner/Release.entitlements`, and to
-      `DebugProfile.entitlements` once debug builds are signed with the team.
-      Without it, sign-in fails on the Mac. It isn't there yet because an
-      unsigned debug build with this entitlement won't launch.
+- [x] `macos/Runner/Release.entitlements` has
+      `com.apple.developer.game-center`. `DebugProfile.entitlements` doesn't,
+      because an ad hoc signed build with it won't launch, so Game Center
+      only works in builds signed with the team.
 - [ ] Check that sign-in, score submission and the leaderboard sheet work in
       a signed build. The leaderboard ID is the iOS one,
       `com.mermik.rgbinvaders.highscores`.
@@ -49,31 +43,23 @@ products apply to it. Build commands are in COMMANDS.md, under "macOS".
 
 ## Signing and upload
 
-The iOS release uses manual signing because of the accented name (see
-COMMANDS.md, "App Store"). Do the same here.
+The Release configuration is signed manually with Apple Distribution and the
+`RGB Invaders Mac App Store` profile. The Game Center entitlement needs a
+real signature, and automatic signing would need this Mac registered as a
+device. So a release build can't be made until the profile is installed, and
+the release `.app` only runs once installed from the store (or TestFlight).
 
 - [ ] At developer.apple.com, create a **Mac App Store Connect** provisioning
       profile for `com.mermik.rgbinvaders` with the Apple Distribution
       certificate. Name it e.g. **`RGB Invaders Mac App Store`** and install
       it.
-- [ ] Create a **Mac Installer Distribution** certificate (needed to sign the
-      `.pkg` that gets uploaded) and add it to the keychain.
-- [ ] Add `macos/ExportOptionsAppStore.plist`, like the iOS one but with the
-      Mac profile's name and `installerSigningCertificate` =
-      `3rd Party Mac Developer Installer`.
-- [ ] **Release build fails.** `flutter build macos --release` stops at
-      `release_unpack_macos` with "FlutterMacOS … does not contain
-      architectures "arm64 x86_64"", even though `lipo` lists both. Debug
-      builds work. Fix this (a newer Flutter, or a clean
-      `~/Library/Developer/Xcode/DerivedData`) before archiving.
-- [ ] Build, archive and upload:
-      `flutter build macos --release`, then open
-      `macos/Runner.xcworkspace` → Product → Archive → Distribute App → App
-      Store Connect. Set `LANG`/`LC_ALL` as in COMMANDS.md. Once this works,
-      add the exact steps to COMMANDS.md.
-- [ ] Check the `.app` is universal (arm64 + x86_64) with
-      `lipo -info "…/RGB Invaders.app/Contents/MacOS/RGB Invaders"`, unless
-      the app is meant to be Apple silicon only.
+- [x] The **3rd Party Mac Developer Installer** certificate (signs the
+      `.pkg` that gets uploaded) is in the keychain.
+- [x] `macos/ExportOptionsAppStore.plist` exists.
+- [x] **Release build fixed.** Flutter 3.47.5 works with Xcode 27's `lipo`;
+      the app is universal (arm64 + x86_64).
+- [ ] Archive, export and upload, following COMMANDS.md ("Mac App Store").
+      Not run yet, because the profile doesn't exist yet.
 
 ## Store listing
 

@@ -32,6 +32,10 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 flutter build macos --release
 # → build/macos/Build/Products/Release/RGB Invaders.app
 ```
 
+Release builds are signed for the Mac App Store (see "Mac App Store" below),
+so they need that profile installed and don't launch outside the store. To
+try the game locally, use a debug or `--profile` build.
+
 ## Web
 
 The web version is played with J, K and L on a computer and by touch on a
@@ -226,3 +230,37 @@ so prefer Organizer.
 
 After the upload is processed (usually 10–30 minutes), the build appears in
 App Store Connect under TestFlight and can be attached to a version.
+
+## Mac App Store
+
+The Mac app is the same App Store Connect record as iOS, with the macOS
+platform added. Bump the build number as for iOS.
+
+### One-time setup
+
+1. The **Apple Distribution** and **3rd Party Mac Developer Installer**
+   certificates must be in the keychain
+   (`security find-identity -v` lists both).
+2. At developer.apple.com → Profiles → **+** → **Mac App Store Connect**, pick
+   the App ID `com.mermik.rgbinvaders` and the Apple Distribution
+   certificate, and name the profile exactly **`RGB Invaders Mac App Store`**
+   (the Release configuration and `macos/ExportOptionsAppStore.plist` refer
+   to it). Download it and double-click it to install.
+
+### Build, export, upload
+
+```sh
+export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+flutter build macos --release
+rm -rf build/macos/RGBInvaders.xcarchive build/macos/export
+xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
+    -configuration Release -archivePath build/macos/RGBInvaders.xcarchive archive
+xcodebuild -exportArchive -archivePath build/macos/RGBInvaders.xcarchive \
+    -exportOptionsPlist macos/ExportOptionsAppStore.plist \
+    -exportPath build/macos/export
+# → build/macos/export/RGB Invaders.pkg
+```
+
+Upload the `.pkg` with **Transporter**, or copy the `.xcarchive` into
+`~/Library/Developer/Xcode/Archives/<date>/` (as in step 4 for iOS) and use
+Organizer → Distribute App → App Store Connect.

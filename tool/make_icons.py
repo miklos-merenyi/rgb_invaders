@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draws the app icon and writes every size iOS and Android need.
+"""Draws the app icon and writes every size iOS, Android, macOS and the web need.
 
 Run from the repo root:  python3 tool/make_icons.py   (needs Pillow)
 
@@ -13,6 +13,8 @@ Outputs:
   Android  adaptive icon (API 26+): foreground/background PNG layers per
            density + vector monochrome layer for themed icons (Android 13+);
            legacy square and round PNGs for API 24-25;
+  macOS    macos/Runner/Assets.xcassets/AppIcon.appiconset/: 16-1024 px,
+           a rounded square with a shadow on Apple's Mac icon grid.
   Web      web/: favicon, 192 and 512 px icons with rounded corners, and
            maskable ones whose sprite stays inside the safe zone.
   Stores   store_assets/: 512x512 Google Play icon, 1024x1024 App Store icon.
@@ -25,6 +27,8 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 IOS_SET = os.path.join(ROOT, "ios/Runner/Assets.xcassets/AppIcon.appiconset")
+MAC_SET = os.path.join(ROOT,
+                       "macos/Runner/Assets.xcassets/AppIcon.appiconset")
 WEB = os.path.join(ROOT, "web")
 RES = os.path.join(ROOT, "android/app/src/main/res")
 STORE = os.path.join(ROOT, "store_assets")
@@ -297,6 +301,33 @@ def write_android():
         f.write(monochrome_vector())
 
 
+# ── macOS ────────────────────────────────────────────────────────────────────
+
+def mac_icon(size):
+    """macOS doesn't mask icons, so draw the shape: on a 1024 canvas, an
+    824 px rounded square (corner radius 185) in the middle, with a soft
+    shadow below it, as on Apple's icon grid."""
+    body = round(size * 824 / 1024)
+    offset = (size - body) // 2
+    icon = full_icon(body).convert("RGBA")
+    icon.putalpha(rounded_mask(body, 185 / 824))
+
+    shadow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    dy = size * 12 / 1024
+    ImageDraw.Draw(shadow).rounded_rectangle(
+        [offset, offset + dy, offset + body - 1, offset + body - 1 + dy],
+        radius=body * 185 / 824, fill=(0, 0, 0, 90))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(size * 10 / 1024))
+    shadow.alpha_composite(icon, (offset, offset))
+    return shadow
+
+
+def write_macos():
+    # The file names are the ones in the set's Contents.json.
+    for size in (16, 32, 64, 128, 256, 512, 1024):
+        mac_icon(size).save(os.path.join(MAC_SET, f"app_icon_{size}.png"))
+
+
 # ── Web ──────────────────────────────────────────────────────────────────────
 
 def write_web():
@@ -330,5 +361,6 @@ def write_store():
 if __name__ == "__main__":
     write_ios()
     write_android()
+    write_macos()
     write_web()
     write_store()
