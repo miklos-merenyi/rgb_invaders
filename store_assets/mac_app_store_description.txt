@@ -1,29 +1,34 @@
-RGB Invaders — App Store listing
-================================
+RGB Invaders — Mac App Store listing
+====================================
 
-Two English localizations. Each storefront searches only its own: the US
-store reads English (U.S.) (plus Spanish (Mexico)), the UK store English
-(U.K.). So both keyword sets carry the strongest terms, and neither repeats
-words from the app name or its own subtitle, which are searched anyway.
+The Mac version of app_store_description.txt. The Mac app is the same App
+Store Connect record with the macOS platform added, so the name and subtitle
+are shared with iOS; promotional text, keywords and description are set per
+platform and are below.
+
+What differs from iOS: J, K and L press the colour buttons instead of
+fingers, Return starts a game, and there are no ads (AdMob has no macOS SDK),
+so a tip keeps the tip-jar popups away instead of removing ads. "brain" makes
+way for "keyboard" in the keywords.
 
 
 ══════════════════════════════════════════
 ENGLISH (U.K.)
 ══════════════════════════════════════════
 
-SUBTITLE (max 30 chars)
------------------------
+SUBTITLE (max 30 chars, shared with iOS)
+----------------------------------------
 Colour Mixing Arcade Shooter
 
 
 PROMOTIONAL TEXT (max 170 chars)
 --------------------------------
-Now on the App Store! Mix red, green and blue to blast pixel invaders, topple rainbow bosses and chain TURBO streaks to wipe the screen. How long can you hold the line?
+Now on the Mac! Press J, K and L together to mix colours, blast pixel invaders, topple rainbow bosses and chain TURBO streaks. No ads. How long can you hold the line?
 
 
 KEYWORDS (max 100 chars, comma-separated)
 -----------------------------------------
-color,space,alien,retro,pixel,8bit,neon,reflex,puzzle,brain,casual,offline,boss,classic,shoot,ufo
+color,space,alien,retro,pixel,8bit,neon,reflex,puzzle,keyboard,casual,offline,boss,classic,shoot,ufo
 
 
 DESCRIPTION (max 4000 chars)
@@ -33,11 +38,11 @@ Red, green and blue. That's all you need — and all you get.
 RGB Invaders is a fast retro arcade shooter with a colour-mixing puzzle twist. Pixel alien invaders in seven colours rain down from space. Fire an expanding ring of colour to destroy them — but a ring only hits an invader of its own colour. Everything else it passes straight through.
 
 MIX YOUR SHOTS
-Tap Red, Green or Blue to fire that colour. Press buttons together to mix:
-• Red + Green = Yellow
-• Green + Blue = Cyan
-• Red + Blue = Magenta
-• Red + Green + Blue = White
+Press J, K or L to fire red, green or blue. Press keys together to mix:
+• J + K = Yellow
+• K + L = Cyan
+• J + L = Magenta
+• J + K + L = White
 
 Only one ring can be on screen at a time, so every shot counts. Pick the wrong colour and you waste precious seconds while the invaders keep coming.
 
@@ -64,18 +69,20 @@ SCORE BIG
 Primary colours are worth 1 point, mixed colours 2, and white 3. Beating a boss or clearing the screen in turbo adds a bonus on top. If a single invader — or the boss — reaches the bottom, it's game over.
 
 COMPETE
-Sign in to Game Center to post your best score to the global leaderboard and see how you stack up. Signing in is optional, and nothing is submitted until you do.
+Sign in to Game Center to post your best score to the global leaderboard, shared with iPhone and iPad players, and see how you stack up. Signing in is optional, and nothing is submitted until you do.
 
-MADE TO PICK UP AND PLAY
-• Just three glossy, multi-touch colour buttons
+MADE FOR THE KEYBOARD
+• Three keys, right under your fingers: J, K and L
+• Each key is written on its colour button
+• Press Return to start a game — no mouse needed
 • A colour-mix legend on screen while you learn
 • Crisp retro pixel art and punchy sound effects
 • Mute button that remembers your setting
-• Works offline
+• Works offline, on Apple silicon and Intel Macs
 • Short rounds, perfect for a quick break — and dangerously hard to put down
 
 FAIR AND FRIENDLY
-RGB Invaders is free to play with occasional ads, limited to family-friendly content. Enjoying the game? Leave a tip from the tip jar to support development and play ad-free for a month, three months or a whole year. Tips stack, and there are no subscriptions.
+RGB Invaders on the Mac is free to play, with no ads. Every so often a tip jar pops up. Enjoying the game? Leave a tip to support development and keep it away for a month, three months or a whole year. Tips stack, and there are no subscriptions.
 
 How long can you hold the line?
 
@@ -85,21 +92,21 @@ ENGLISH (U.S.)
 ══════════════════════════════════════════
 
 Same text in US spelling. "color" moves from the keywords into the
-subtitle, which frees room for "galaxy".
+subtitle, which frees room for "galaxy" ("ufo" goes to fit 100 chars).
 
-SUBTITLE (max 30 chars)
------------------------
+SUBTITLE (max 30 chars, shared with iOS)
+----------------------------------------
 Color Mixing Arcade Shooter
 
 
 PROMOTIONAL TEXT (max 170 chars)
 --------------------------------
-Now on the App Store! Mix red, green and blue to blast pixel invaders, topple rainbow bosses and chain TURBO streaks to wipe the screen. How long can you hold the line?
+Now on the Mac! Press J, K and L together to mix colors, blast pixel invaders, topple rainbow bosses and chain TURBO streaks. No ads. How long can you hold the line?
 
 
 KEYWORDS (max 100 chars, comma-separated)
 -----------------------------------------
-space,alien,retro,pixel,8bit,neon,reflex,puzzle,brain,casual,offline,boss,classic,shoot,ufo,galaxy
+space,alien,retro,pixel,8bit,neon,reflex,puzzle,keyboard,casual,offline,boss,classic,shoot,galaxy
 
 
 DESCRIPTION (max 4000 chars)
@@ -109,11 +116,11 @@ Red, green and blue. That's all you need — and all you get.
 RGB Invaders is a fast retro arcade shooter with a color-mixing puzzle twist. Pixel alien invaders in seven colors rain down from space. Fire an expanding ring of color to destroy them — but a ring only hits an invader of its own color. Everything else it passes straight through.
 
 MIX YOUR SHOTS
-Tap Red, Green or Blue to fire that color. Press buttons together to mix:
-• Red + Green = Yellow
-• Green + Blue = Cyan
-• Red + Blue = Magenta
-• Red + Green + Blue = White
+Press J, K or L to fire red, green or blue. Press keys together to mix:
+• J + K = Yellow
+• K + L = Cyan
+• J + L = Magenta
+• J + K + L = White
 
 Only one ring can be on screen at a time, so every shot counts. Pick the wrong color and you waste precious seconds while the invaders keep coming.
 
@@ -140,17 +147,19 @@ SCORE BIG
 Primary colors are worth 1 point, mixed colors 2, and white 3. Beating a boss or clearing the screen in turbo adds a bonus on top. If a single invader — or the boss — reaches the bottom, it's game over.
 
 COMPETE
-Sign in to Game Center to post your best score to the global leaderboard and see how you stack up. Signing in is optional, and nothing is submitted until you do.
+Sign in to Game Center to post your best score to the global leaderboard, shared with iPhone and iPad players, and see how you stack up. Signing in is optional, and nothing is submitted until you do.
 
-MADE TO PICK UP AND PLAY
-• Just three glossy, multi-touch color buttons
+MADE FOR THE KEYBOARD
+• Three keys, right under your fingers: J, K and L
+• Each key is written on its color button
+• Press Return to start a game — no mouse needed
 • A color-mix legend on screen while you learn
 • Crisp retro pixel art and punchy sound effects
 • Mute button that remembers your setting
-• Works offline
+• Works offline, on Apple silicon and Intel Macs
 • Short rounds, perfect for a quick break — and dangerously hard to put down
 
 FAIR AND FRIENDLY
-RGB Invaders is free to play with occasional ads, limited to family-friendly content. Enjoying the game? Leave a tip from the tip jar to support development and play ad-free for a month, three months or a whole year. Tips stack, and there are no subscriptions.
+RGB Invaders on the Mac is free to play, with no ads. Every so often a tip jar pops up. Enjoying the game? Leave a tip to support development and keep it away for a month, three months or a whole year. Tips stack, and there are no subscriptions.
 
 How long can you hold the line?

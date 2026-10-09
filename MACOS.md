@@ -68,10 +68,9 @@ runs once installed from the store (or TestFlight).
       `tool/make_mac_screenshots.py` (see COMMANDS.md, "macOS screenshots").
 - [ ] **US screenshots (optional).** The captions say "colours"; for the US
       listing, change them to "colors" in the script and run it again.
-- [ ] **Description.** `store_assets/app_store_description.txt` says "Tap Red,
-      Green or Blue", mentions "multi-touch colour buttons" and "occasional
-      ads". Write a Mac version that says J, K and L, and that the Mac app has
-      no ads.
+- [x] **Description.** `store_assets/mac_app_store_description.txt` has
+      the Mac promotional text, keywords and description: J, K and L instead
+      of taps, and no ads.
 - [ ] **"Rate the app".** `_kAppStoreId` in `lib/game/game_screen.dart` is
       still empty. Once it's filled in, the Mac app opens the store's review
       page too.
