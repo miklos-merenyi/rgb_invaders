@@ -1,0 +1,65 @@
+RGB Invaders 1.0.16 (build 21) — release notes
+==============================================
+
+Changes since 1.0.13 (build 17). The store texts below are written for
+players; the full list at the end is for reference.
+
+
+══════════════════════════════════════════
+WHAT'S NEW — App Store and Google Play (max 500 chars for Play)
+══════════════════════════════════════════
+
+UK English:
+
+• Start at any wave up to 5 that you've already reached — pick it on the start screen.
+• Game over goes out with a bang: the colour buttons burst one by one.
+• A boss now ends the game as soon as its full height reaches the bottom.
+• Fixed rings sometimes passing through invaders without hitting them, and the ring's sharp edge vanishing on some tablets.
+
+US English: the same, with "color buttons".
+
+
+══════════════════════════════════════════
+WHAT'S NEW — Mac App Store (first release)
+══════════════════════════════════════════
+
+UK English:
+
+RGB Invaders is now on the Mac! Press J, K and L to fire red, green and blue, and press them together to mix colours. Return starts a game, so you never need the mouse. No ads, and the same Game Center leaderboard as iPhone and iPad.
+
+US English: the same, with "colors".
+
+
+══════════════════════════════════════════
+FULL LIST
+══════════════════════════════════════════
+
+Gameplay
+• Start at wave: once you've reached wave 2 or later, the start screen lets
+  you start a new game at any wave you've reached, up to wave 5. The best
+  wave is remembered on the device.
+• At game over the three colour buttons burst one after another, each with
+  its own blast sound, and pop back in for the next game.
+• A boss ends the game when its bottom row reaches the bottom, even if
+  those bands were shot away. Before, only its remaining bands counted.
+
+Fixes
+• On slow frames a ring could grow past an invader without its edge ever
+  landing on it. Hits now count everything the edge swept over since the
+  last frame.
+• The ring's sharp line disappeared on some GPUs (seen on a Lenovo Tab
+  M10), leaving only the blurred glow. It's now drawn a different way.
+
+New platforms
+• macOS: played with J, K and L (written on the buttons); keys pressed
+  together mix like fingers. Return or Enter presses Start Game and Play
+  Again. No ads, since AdMob has no macOS SDK; the tip jar keeps its
+  popups away instead. Game Center and tips use the iOS IDs.
+• Web: played with J, K and L or by touch, kept phone-shaped in a wide
+  window. No ads, tips, ratings or leaderboard.
+
+Other
+• The Share the app screen says it works on iPhone, iPad and Android.
+• iOS builds declare no non-exempt encryption, so uploads skip the export
+  compliance question.
+• Updated to Flutter 3.47.5.
